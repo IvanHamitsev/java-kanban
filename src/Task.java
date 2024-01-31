@@ -1,12 +1,11 @@
 class Task implements Cloneable {
     String name;
     String description;
+    Status status;
     // Возложим задачу контроля уникальности генерации номера задачи на сам класс Task.
     // Пусть помнит число созданных задач и генерит из него taskHashNumber
     private static int tasksCount = 0;
-    int taskHashNumber;
-    Status status;
-
+    public int taskHashNumber;
     public Task() {
         if (tasksCount == 0) {
             // начнём с непростого числа

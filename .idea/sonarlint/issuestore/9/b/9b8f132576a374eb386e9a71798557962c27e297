@@ -1,12 +1,11 @@
 
-{
-java:S2293	"YReplace the type specification in this constructor call with the diamond operator ("<>").(–ı ûÿÿÿÿ8ì‚îŒÕ1
-
-java:S1319
-"pThe return type of this method should be an interface such as "List" rather than the implementation "ArrayList".(ºµÆ‰8ì‚îŒÕ1
-x
-java:S1488"[Immediately return this expression instead of assigning it to the temporary variable "res".(á–Ğä8ì‚îŒÕ1
 Q
-java:S1068	"/Remove this unused "taskHashMap" private field.(–ı ûÿÿÿÿ8ü‚îŒÕ1
+java:S1066I"/Merge this if statement with the enclosing one.(ÓËÔûÿÿÿÿ8÷şª‰Ö1
+
+java:S1319	"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(Ì´«¼ûÿÿÿÿ8÷şª‰Ö1
+}
+java:S1488"[Immediately return this expression instead of assigning it to the temporary variable "res".(ŠŞ«çıÿÿÿÿ8÷şª‰Ö1
+Q
+java:S11448"/Remove this unused private "addSubTask" method.(ŸûºÏıÿÿÿÿ8–ÿª‰Ö1
 L
-java:S1144+"/Remove this unused private "addSubTask" method.(ò¼Éï8ü‚îŒÕ1
+java:S1144@"/Remove this unused private "addSubTask" method.(ò¼Éï8–ÿª‰Ö1

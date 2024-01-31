@@ -1,15 +1,17 @@
 
 ~
-java:S14889"\Immediately return this expression instead of assigning it to the temporary variable "task".(¾òõ¡ÿÿÿÿÿ8é±½‰Õ1
+java:S14888"\Immediately return this expression instead of assigning it to the temporary variable "task".(¾òõ¡ÿÿÿÿÿ8Å€¨ˆÖ1
+|
+java:S1104"ZMake taskHashNumber a static final constant or non-public and provide accessors if needed.(®ûš‡ıÿÿÿÿ8Å€¨ˆÖ1
 m
-java:S1206'"PThis class overrides "equals()" and should therefore also override "hashCode()".(ÜÑã8ù±½‰Õ1
+java:S1206&"PThis class overrides "equals()" and should therefore also override "hashCode()".(ÜÑã8Ô€¨ˆÖ1
 I
-java:S3010"'Remove this assignment of "tasksCount".(ï£Ñ¢úÿÿÿÿ8‰²½‰Õ1
+java:S3010"'Remove this assignment of "tasksCount".(ï£Ñ¢úÿÿÿÿ8ä€¨ˆÖ1
 K
-java:S1905)")Remove this unnecessary cast to "Object".(ÎÃŒÛıÿÿÿÿ8‰²½‰Õ1
+java:S1905(")Remove this unnecessary cast to "Object".(ÎÃŒÛıÿÿÿÿ8ä€¨ˆÖ1
 ^
-java:S11261"AReplace this if-then-else statement by a single return statement.(ê¨¡÷8‰²½‰Õ1
+java:S11260"AReplace this if-then-else statement by a single return statement.(ê¨¡÷8ä€¨ˆÖ1
 o
-java:S29758"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(­æğ8‰²½‰Õ1
+java:S29757"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(­æğ8ô€¨ˆÖ1
 d
-java:S11828"HUse super.clone() to create and seed the cloned instance to be returned.(­æğ8‰²½‰Õ1
+java:S11827"HUse super.clone() to create and seed the cloned instance to be returned.(­æğ8ô€¨ˆÖ1

@@ -1,8 +1,9 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 // implements Cloneable чтобы через склонированный список Epic нельзя было менять оригинальные подзадачи
 class Epic extends Task implements Cloneable {
-    private ArrayList<Subtask> subtasks = new ArrayList<>();
+    private HashMap<Integer, Subtask> subtasks = new HashMap<>();
 
     public void calcStatus() {
         if (subtasks.size() > 0) {
@@ -10,7 +11,7 @@ class Epic extends Task implements Cloneable {
             Status optimisticStatus = Status.DONE;
             Status pessimisticStatus = Status.NEW;
             // и корректируем их жизнью
-            for (Subtask subtask : subtasks) {
+            for (Subtask subtask : subtasks.values()) {
                 if (subtask.status == Status.NEW) {
                     // понижаем оптимистичную гипотезу
                     optimisticStatus = Status.IN_PROGRESS;
@@ -37,19 +38,23 @@ class Epic extends Task implements Cloneable {
     }
     public void addSubtask(Subtask subtask) {
         subtask.parent = this;
-        this.subtasks.add(subtask);
+        this.subtasks.put(subtask.taskHashNumber, subtask);
+    }
+
+    public Subtask getSubtask(Integer ident) {
+        return this.subtasks.get(ident);
     }
 
     @Override
     protected Object clone() {
         Epic newEpic = (Epic) super.clone();
-        // Может доверять ArrayList<>.clone ?
-        newEpic.subtasks = new ArrayList<>();
-        for (Subtask subtask : this.subtasks) {
+        // может как-то доверить HashMap<>.clone ?
+        newEpic.subtasks = new HashMap<>();
+        for (Subtask subtask : this.subtasks.values()) {
             Subtask newSub = (Subtask) subtask.clone();
             // установить ссылки в своих подзадачах
             newSub.parent = newEpic;
-            newEpic.subtasks.add(newSub);
+            newEpic.subtasks.put(newSub.taskHashNumber, newSub);
         }
         return newEpic;
     }
