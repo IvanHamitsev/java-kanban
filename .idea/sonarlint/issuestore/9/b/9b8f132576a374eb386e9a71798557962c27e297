@@ -1,11 +1,13 @@
 
-Q
-java:S1066I"/Merge this if statement with the enclosing one.(ÓËÔûÿÿÿÿ8÷şª‰Ö1
 
-java:S1319	"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(Ì´«¼ûÿÿÿÿ8÷şª‰Ö1
+java:S1319"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(Ì´«¼ûÿÿÿÿ8èêú°Ö1
+
+java:S1319q"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(Ã¶ˆÂşÿÿÿÿ8èêú°Ö1
+
+java:S1319t"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(—ÀÊÿÿÿÿÿ8èêú°Ö1
 }
-java:S1488"[Immediately return this expression instead of assigning it to the temporary variable "res".(ŠŞ«çıÿÿÿÿ8÷şª‰Ö1
-Q
-java:S11448"/Remove this unused private "addSubTask" method.(ŸûºÏıÿÿÿÿ8–ÿª‰Ö1
-L
-java:S1144@"/Remove this unused private "addSubTask" method.(ò¼Éï8–ÿª‰Ö1
+java:S1488"[Immediately return this expression instead of assigning it to the temporary variable "res".(ŠŞ«çıÿÿÿÿ8èêú°Ö1
+I
+java:S1905$"'Remove this unnecessary cast to "Task".(ÜÑéåùÿÿÿÿ8‡ëú°Ö1
+A
+java:S1168y"$Return an empty map instead of null.(¥¹ï8—ëú°Ö1

@@ -5,6 +5,10 @@ public class TaskManager {
     // Свои подзадачи каждый Epic хранит (ссылается на HashMap объектов Subtask) самостоятельно
     private HashMap<Integer, Task> taskList = new HashMap<>();
 
+    public TaskManager() {
+        // функционал конструктора
+    }
+
     // a. Получение списка всех задач.
     public HashMap<Integer, Task> getTask() {
         // не хочу отдавать сам список, отдадим его копию, чтобы не вмешались в оригинал
@@ -29,7 +33,10 @@ public class TaskManager {
             // для каждого Epic заглянуть в подзадачи
             if (task.getClass() == Epic.class) {
                 Epic epic = (Epic) task;
-                return (Task) epic.getSubtask(taskHashNumber);
+                Task result = (Task) epic.getSubtask(taskHashNumber);
+                if (null != result) {
+                    return result;
+                }
             }
         }
         return null;
@@ -43,7 +50,7 @@ public class TaskManager {
         if (task != null) {
             Task newTask = (Task) task;
             newTask = (Task) newTask.clone();
-            taskList.put(newTask.taskHashNumber, newTask);
+            taskList.put(newTask.getTaskHashNumber(), newTask);
         }
     }
     // функции-посредники, чтобы была возможность добавить только объекты двух типов
@@ -53,39 +60,74 @@ public class TaskManager {
     public void addTask(Epic epic) {
         addTask((Object) epic);
     }
-    private void addSubTask(Integer epicIdent, Subtask subtask) {
-        Task task = taskList.get(epicIdent);
-        if ((task != null)&&(task.getClass() == Epic.class)) { // о, рефлексией запахло
-            Epic epic = (Epic) task;
+    // особая логика для добавления объекта Subtask с заполненным parentHashNumber
+    public void addTask(Subtask subtask) {
+        Epic epic = (Epic) taskList.get(subtask.getParentHashNumber());
+        if (epic != null) {
             epic.addSubtask(subtask);
         }
-    }
-    // функцию можно вызывать только изнутри: ссылка на epic снаружи не известна
-    private void addSubTask(Epic epic, Subtask subtask) {
-        epic.addSubtask(subtask);
     }
 
     //  e. Обновление. Новая версия объекта с верным идентификатором передаётся в виде параметра.
     public void updateTask(Task task) {
-        // как не впихнуть новый объект, а заменить существующий?
         if (task != null) {
-            // впрямую можно обновить только элементы this.taskList
+            // впрямую можно обновить только элементы this.taskList, рефлексируем
             if ((task.getClass() == Task.class)||(task.getClass() == Epic.class)) {
+                // не впихнуть новый объект, а заменить существующий
+                delTask(task.getTaskHashNumber());
                 addTask(task);
             }
-            // если нам дали подзадачу, нужно найти её родителя. Пока не ясно как
+            // Если нам дали подзадачу, нужно найти её родителя
+            if (task.getClass() == Subtask.class) {
+                Subtask subtask = (Subtask) task;
+                Epic epic = (Epic) taskList.get(subtask.getParentHashNumber());
+                if (null != epic) {
+                    // не добавить, а заменить
+                    epic.dellSubtask(subtask.getTaskHashNumber());
+                    epic.addSubtask(subtask);
+                }
+            }
         }
     }
 
     // f. Удаление по идентификатору.
-    public void delTask(int taskHashNumber) {
-        // просто удалить Task и Epic
-        taskList.remove(taskHashNumber);
-        // а вот Subtask надо ещё найти
+    public void delTask(Integer taskHashNumber) {
+        // просто и быстро удалить Task и Epic
+        if (null == taskList.remove(taskHashNumber)) {
+            // не найден элемент в taskList, придётся долго искать в Subtask перебором
+            for (Task task : taskList.values()) {
+                // для каждого Epic заглянуть в подзадачи
+                if (task.getClass() == Epic.class) {
+                    Epic epic = (Epic) task;
+                    if (null !=  epic.dellSubtask(taskHashNumber)) {
+                        // удаляем только первое вхождение, прекращаем перебор
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     // Дополнительные методы:
     // a. Получение списка всех подзадач определённого эпика.
+    public HashMap<Integer, Subtask> getSubtaskList(Epic epic) {
+        return getSubtaskList(epic.getTaskHashNumber());
+    }
+    public HashMap<Integer, Subtask> getSubtaskList(Integer epicHashNumber) {
+        Epic epic = (Epic) taskList.get(epicHashNumber);
+        if (null != epic) {
+            return epic.getSubtaskList();
+        }
+        return null;
+    }
 
-
+    @Override
+    public String toString() {
+        String res = "TaskManager{\n";
+        for (Task task : taskList.values()) {
+            res = res.concat(task.toString());
+        }
+        res = res.concat("}");
+        return res;
+    }
 }

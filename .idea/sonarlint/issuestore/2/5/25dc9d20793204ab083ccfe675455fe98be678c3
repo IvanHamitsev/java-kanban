@@ -1,3 +1,10 @@
 
+M
+java:S2160"+Override the "equals" method in this class.(½¤àùÿÿÿÿ8Óâá±Ö1
 o
-java:S2975	"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(­æğ8‹³’‹Õ1
+java:S2975%"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(­æğ8¶ƒ¸±Ö1
+]	java:S125&"<This block of commented-out lines of code should be removed.(™Øôşÿÿÿÿ8¶ƒ¸±Ö1
+d
+java:S1182%"HUse super.clone() to create and seed the cloned instance to be returned.(­æğ8Æƒ¸±Ö1
+L
+java:S1068"*Remove this unused "parent" private field.(¼ÙŞÈøÿÿÿÿ8Æƒ¸±Ö1
