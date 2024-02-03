@@ -1,7 +1,7 @@
 
 
-java:S1319"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(¦ıçíùÿÿÿÿ8µÁçñÖ1
+java:S1319"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(¦ıçíùÿÿÿÿ8¹î§øÖ1
 H
-java:S2160"+Override the "equals" method in this class.(‡¢ÉÎ8ÕÁçñÖ1
+java:S2160"+Override the "equals" method in this class.(‡¢ÉÎ8Éî§øÖ1
 p
-java:S2975!"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(¯áÑë8ÕÁçñÖ1
+java:S2975!"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(¯áÑë8Øî§øÖ1

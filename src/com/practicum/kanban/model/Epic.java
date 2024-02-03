@@ -32,8 +32,9 @@ public class Epic extends Task {
     @Override
     public Object clone() throws CloneNotSupportedException {
         // объект составной, глубокое копирование, склонируем HashMap
-        this.subtasks = (HashMap<Integer, Subtask>) subtasks.clone();
-        return super.clone();
+        Epic newObject = (Epic) super.clone();
+        newObject.subtasks = (HashMap<Integer, Subtask>) this.subtasks.clone();
+        return newObject;
     }
 
     @Override
