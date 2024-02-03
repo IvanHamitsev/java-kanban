@@ -20,10 +20,6 @@ public class Subtask extends Task {
         super(name, description, status);
     }
 
-    protected Subtask(String name, String description, Integer taskHashNumber, Status status) {
-        super(name, description, taskHashNumber, status);
-    }
-
     public Integer getParentId() {
         return parentId;
     }
@@ -33,13 +29,11 @@ public class Subtask extends Task {
     }
 
     @Override
-    public Object clone() {
-        //Subtask newSub = (Subtask) this.clone();
-        Subtask newSub = new Subtask(this.name, this.description, this.getTaskId(), this.status);
-        // ссылку на эпик заполнять не надо, их проставит при создании или добавлении Epic
-        newSub.parentId = null;
-        return newSub;
+    public Object clone() throws CloneNotSupportedException {
+        // поверхностное копирование достаточно
+        return super.clone();
     }
+
     @Override
     public String toString() {
         return "Subtask{" +

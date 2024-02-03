@@ -21,11 +21,6 @@ public class Epic extends Task {
         super(name, description, status);
     }
 
-    // Закрытый конструктор для клонирования
-    protected Epic(String name, String description, Integer taskHashNumber, Status status) {
-        super(name, description, taskHashNumber, status);
-    }
-
     public HashMap<Integer, Subtask> getSubtasks() {
         return subtasks;
     }
@@ -35,16 +30,10 @@ public class Epic extends Task {
     }
 
     @Override
-    public Object clone() {
-        Epic newEpic = new Epic(this.name, this.description, this.id, this.status);
-        newEpic.subtasks = new HashMap<>();
-        for (Subtask subtask : this.subtasks.values()) {
-            Subtask newSub = (Subtask) subtask.clone();
-            // установить ссылки в своих подзадачах
-            newSub.setParentId(newSub.getTaskId());
-            newEpic.subtasks.put(newSub.getTaskId(), newSub);
-        }
-        return newEpic;
+    public Object clone() throws CloneNotSupportedException {
+        // объект составной, глубокое копирование, склонируем HashMap
+        this.subtasks = (HashMap<Integer, Subtask>) subtasks.clone();
+        return super.clone();
     }
 
     @Override

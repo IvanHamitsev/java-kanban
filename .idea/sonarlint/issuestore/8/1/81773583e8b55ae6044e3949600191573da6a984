@@ -6,31 +6,27 @@ java:S1319"mThe return type of this method should be an interface such as "Map
 
 java:S1319"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(«ÆÈ’üÿÿÿÿ8¿¼İïÖ1
 
-java:S1319¿"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(¬ôÒ°ıÿÿÿÿ8¿¼İïÖ1
+java:S1319Â"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(¬ôÒ°ıÿÿÿÿ8¿¼İïÖ1
 n
-java:S1301Î"KReplace this "switch" statement by "if" statements to increase readability.(˜²Ëùşÿÿÿÿ8¿¼İïÖ1
+java:S1301Ñ"KReplace this "switch" statement by "if" statements to increase readability.(˜²Ëùşÿÿÿÿ8¿¼İïÖ1
 }
 java:S1488"[Immediately return this expression instead of assigning it to the temporary variable "res".(ŠŞ«çıÿÿÿÿ8¿¼İïÖ1
 x
 java:S1488"[Immediately return this expression instead of assigning it to the temporary variable "res".(©‚¬8¿¼İïÖ1
-Ÿ
-java:S11307"}Remove the declaration of thrown exception 'java.lang.CloneNotSupportedException', as it cannot be thrown from method's body.(Í²Éàÿÿÿÿÿ8úè®ñÖ1
-š
-java:S1130["}Remove the declaration of thrown exception 'java.lang.CloneNotSupportedException', as it cannot be thrown from method's body.(‹ÈŞÅ8åÑ¯ñÖ1
 D
-java:S1905z"'Remove this unnecessary cast to "Epic".(ı×îĞ8‰é®ñÖ1
+java:S1905z"'Remove this unnecessary cast to "Epic".(ı×îĞ8¼ÀòÖ1
 E
-java:S1905"'Remove this unnecessary cast to "Epic".(ı×îĞ8‰é®ñÖ1
+java:S1905"'Remove this unnecessary cast to "Epic".(ı×îĞ8ËÀòÖ1
 D
-java:S1905¢"'Remove this unnecessary cast to "Epic".(ª—ÆG8™é®ñÖ1
+java:S1905£"'Remove this unnecessary cast to "Epic".(ª—ÆG8ËÀòÖ1
 E
-java:S1905«"'Remove this unnecessary cast to "Epic".(ı×îĞ8™é®ñÖ1
+java:S1905­"'Remove this unnecessary cast to "Epic".(ı×îĞ8ËÀòÖ1
 D
-java:S1905Á"'Remove this unnecessary cast to "Epic".(ª—ÆG8™é®ñÖ1
-{	java:S131Î"YComplete cases by adding the missing enum constants or add a default case to this switch.(˜²Ëùşÿÿÿÿ8©é®ñÖ1
+java:S1905Ä"'Remove this unnecessary cast to "Epic".(ª—ÆG8ÛÀòÖ1
+{	java:S131Ñ"YComplete cases by adding the missing enum constants or add a default case to this switch.(˜²Ëùşÿÿÿÿ8ÛÀòÖ1
 P
-java:S1172Ü"-Remove this unused method parameter "status".(ÆË›şÿÿÿÿ8Š¾İïÖ1
+java:S1172ß"-Remove this unused method parameter "status".(ÆË›şÿÿÿÿ8Š¾İïÖ1
 T
-java:S1751á"6Remove this "return" statement or make it conditional.(ûÁİ…8Š¾İïÖ1
+java:S1751ä"6Remove this "return" statement or make it conditional.(ûÁİ…8Š¾İïÖ1
 u
-java:S3776í"RRefactor this method to reduce its Cognitive Complexity from 20 to the 15 allowed.(ÏÉ¦—ıÿÿÿÿ8š¾İïÖ1
+java:S3776ğ"RRefactor this method to reduce its Cognitive Complexity from 20 to the 15 allowed.(ÏÉ¦—ıÿÿÿÿ8š¾İïÖ1

@@ -60,7 +60,7 @@ public class TaskManager {
         return null;
     }
 
-    public Epic getEpic(Integer taskId) {
+    public Epic getEpic(Integer taskId) throws CloneNotSupportedException {
         if (epicList.get(taskId) != null) {
             // отдаём копию
             return (Epic) epicList.get(taskId).clone();
@@ -97,7 +97,7 @@ public class TaskManager {
         }
     }
 
-    public void addEpic(Epic epic) {
+    public void addEpic(Epic epic) throws CloneNotSupportedException {
         if (epic != null) {
             Epic newEpic = (Epic) epic.clone();
             epicList.put(newEpic.getTaskId(), newEpic);
@@ -105,7 +105,7 @@ public class TaskManager {
     }
 
     // добавление Subtask если указан эпик
-    public void addSubtask(Integer epicId, Subtask subtask) {
+    public void addSubtask(Integer epicId, Subtask subtask) throws CloneNotSupportedException {
         Epic epic = epicList.get(epicId);
         if (null != epic) {
             Subtask newSubtask = (Subtask) subtask.clone();
@@ -113,12 +113,12 @@ public class TaskManager {
             newSubtask.setParentId(epic.getTaskId());
             epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
             // обновить статус эпика
-            calcStatusAdd(epic,newSubtask.getStatus());
+            calcStatusAdd(epic, newSubtask.getStatus());
         }
     }
 
     // добавление Subtask если не указан эпик
-    public void addSubtask(Subtask subtask) {
+    public void addSubtask(Subtask subtask) throws CloneNotSupportedException {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
         if (epic != null) {
             addSubtask(epic.getTaskId(), subtask);
@@ -140,7 +140,7 @@ public class TaskManager {
         }
     }
 
-    public void updateSubtask(Subtask subtask) {
+    public void updateSubtask(Subtask subtask) throws CloneNotSupportedException {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
         if (epic != null) {
             deleteSubtask(epic.getTaskId(), subtask.getTaskId());
@@ -157,7 +157,8 @@ public class TaskManager {
     public void deleteEpic(Integer taskId) {
         epicList.remove(taskId);
     }
-    // с указание эпика
+
+    // с указанием эпика
     public void deleteSubtask(Integer epicId, Integer subtaskId) {
         Epic epic = (Epic) epicList.get(epicId);
         if (null != epic) {
@@ -166,6 +167,7 @@ public class TaskManager {
             calcStatusRemove(epic, status);
         }
     }
+
     // без указания эпика зная объект Subtask
     public void deleteSubtask(Subtask subtask) {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
@@ -175,6 +177,7 @@ public class TaskManager {
             calcStatusRemove(epic, status);
         }
     }
+
     // без указания эпика зная subtaskId
     public void deleteSubtask(Integer subtaskId) {
         for (Epic epic : epicList.values()) {

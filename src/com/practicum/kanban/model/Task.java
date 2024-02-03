@@ -38,14 +38,6 @@ public class Task implements Cloneable {
         this.status = status;
     }
 
-    // Закрытый конструктор для клонирования умеет создать экземпляр Task с идентичным taskHashNumber
-    protected Task(String name, String description, int taskHashNumber, Status status) {
-        this.name = name;
-        this.description = description;
-        this.id = taskHashNumber;
-        this.status = status;
-    }
-
     public String getName() {
         return name;
     }
@@ -97,6 +89,7 @@ public class Task implements Cloneable {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
+        // воспользовался стандартным приёмом клонирования, но теперь по всему коду throws CloneNotSupportedException
         return super.clone();
     }
 
@@ -105,6 +98,6 @@ public class Task implements Cloneable {
         return "Task{" +
                 "id=" + id +
                 " '" + name + '\'' +
-                " "+status +" }\n";
+                " " + status + " }\n";
     }
 }
