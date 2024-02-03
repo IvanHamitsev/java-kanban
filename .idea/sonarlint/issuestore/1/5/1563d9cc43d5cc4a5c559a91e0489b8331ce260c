@@ -1,15 +1,0 @@
-
-~
-java:S1488D"\Immediately return this expression instead of assigning it to the temporary variable "task".(¾òõ¡ÿÿÿÿÿ8è»Û±Ö1
-m
-java:S12063"PThis class overrides "equals()" and should therefore also override "hashCode()".(ÜÑã8ø»Û±Ö1
-I
-java:S3010"'Remove this assignment of "tasksCount".(ï£Ñ¢úÿÿÿÿ8ø»Û±Ö1
-K
-java:S19055")Remove this unnecessary cast to "Object".(ÎÃŒÛıÿÿÿÿ8ø»Û±Ö1
-^
-java:S1126="AReplace this if-then-else statement by a single return statement.(ê¨¡÷8ø»Û±Ö1
-o
-java:S2975C"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(­æğ8ø»Û±Ö1
-d
-java:S1182C"HUse super.clone() to create and seed the cloned instance to be returned.(­æğ8ˆ¼Û±Ö1

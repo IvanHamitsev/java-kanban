@@ -1,0 +1,6 @@
+
+p
+java:S2975$"SRemove this "clone" implementation; use a copy constructor or copy factory instead.(Ž²ÈÞ8‹æ®ÙÖ1
+]	java:S125%"<This block of commented-out lines of code should be removed.(™Øôþÿÿÿÿ8‹æ®ÙÖ1
+e
+java:S1182$"HUse super.clone() to create and seed the cloned instance to be returned.(Ž²ÈÞ8‹æ®ÙÖ1
