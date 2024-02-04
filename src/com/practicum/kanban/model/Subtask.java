@@ -20,18 +20,17 @@ public class Subtask extends Task {
         super(name, description, status);
     }
 
+    public Subtask(Subtask in) {
+        super(in);
+        this.parentId = in.getParentId();
+    }
+
     public Integer getParentId() {
         return parentId;
     }
 
     public void setParentId(Integer parentId) {
         this.parentId = parentId;
-    }
-
-    @Override
-    public Object clone() throws CloneNotSupportedException {
-        // поверхностное копирование достаточно
-        return super.clone();
     }
 
     @Override

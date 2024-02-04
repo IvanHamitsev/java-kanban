@@ -21,20 +21,19 @@ public class Epic extends Task {
         super(name, description, status);
     }
 
+    public Epic(Epic in) {
+        super(in);
+        for (Subtask subtask : in.getSubtasks().values()) {
+            subtasks.put(subtask.getTaskId(), subtask);
+        }
+    }
+
     public HashMap<Integer, Subtask> getSubtasks() {
         return subtasks;
     }
 
     public void insertSubtask(Subtask subtask) {
         subtasks.put(subtask.getTaskId(), subtask);
-    }
-
-    @Override
-    public Object clone() throws CloneNotSupportedException {
-        // объект составной, глубокое копирование, склонируем HashMap
-        Epic newObject = (Epic) super.clone();
-        newObject.subtasks = (HashMap<Integer, Subtask>) this.subtasks.clone();
-        return newObject;
     }
 
     @Override

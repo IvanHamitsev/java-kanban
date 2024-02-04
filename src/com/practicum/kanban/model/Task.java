@@ -1,6 +1,6 @@
 package com.practicum.kanban.model;
 
-public class Task implements Cloneable {
+public class Task {
     protected String name;
     protected String description;
     protected Status status;
@@ -36,6 +36,13 @@ public class Task implements Cloneable {
     public Task(String name, String description, Status status) {
         this(name, description);
         this.status = status;
+    }
+
+    public Task(Task in) {
+        this.name = in.getName();
+        this.description = in.getDescription();
+        this.status = in.getStatus();
+        this.id = in.getTaskId();
     }
 
     public String getName() {
@@ -85,12 +92,6 @@ public class Task implements Cloneable {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public Object clone() throws CloneNotSupportedException {
-        // воспользовался стандартным приёмом клонирования, но теперь по всему коду throws CloneNotSupportedException
-        return super.clone();
     }
 
     @Override

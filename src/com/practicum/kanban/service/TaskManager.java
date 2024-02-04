@@ -42,18 +42,18 @@ public class TaskManager {
     }
 
     // c. Получение по идентификатору.
-    public Task getTask(Integer taskId) throws CloneNotSupportedException {
+    public Task getTask(Integer taskId) {
         if (taskList.get(taskId) != null) {
             // отдаём копию
-            return (Task) taskList.get(taskId).clone();
+            return new Task(taskList.get(taskId));
         }
         return null;
     }
 
-    public Epic getEpic(Integer taskId) throws CloneNotSupportedException {
+    public Epic getEpic(Integer taskId) {
         if (epicList.get(taskId) != null) {
             // отдаём копию
-            return (Epic) epicList.get(taskId).clone();
+            return new Epic(epicList.get(taskId));
         }
         return null;
     }
@@ -78,26 +78,26 @@ public class TaskManager {
     }
 
     // d. Создание. Сам объект должен передаваться в качестве параметра.
-    public void addTask(Task task) throws CloneNotSupportedException {
+    public void addTask(Task task) {
         // добавим копию полученной задачи, чтобы у пользователя не оставалось ссылки для
         // несанкционированного доступа
         if (task != null) {
-            Task newTask = (Task) task.clone();
+            Task newTask = new Task(task);
             taskList.put(newTask.getTaskId(), newTask);
         }
     }
 
-    public void addEpic(Epic epic) throws CloneNotSupportedException {
+    public void addEpic(Epic epic) {
         if (epic != null) {
-            Epic newEpic = (Epic) epic.clone();
+            Epic newEpic = new Epic(epic);
             epicList.put(newEpic.getTaskId(), newEpic);
         }
     }
 
-    public void addSubtask(Subtask subtask) throws CloneNotSupportedException {
+    public void addSubtask(Subtask subtask) {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
         if (epic != null) {
-            Subtask newSubtask = (Subtask) subtask.clone();
+            Subtask newSubtask = new Subtask(subtask);
             // клонирование не проставляет ссылки, проставим их
             newSubtask.setParentId(epic.getTaskId());
             epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
@@ -107,21 +107,21 @@ public class TaskManager {
     }
 
     //  e. Обновление. Новая версия объекта с верным идентификатором передаётся в виде параметра.
-    public void updateTask(Task task) throws CloneNotSupportedException {
+    public void updateTask(Task task) {
         if (task != null) {
             deleteTask(task.getTaskId());
             addTask(task);
         }
     }
 
-    public void updateEpic(Epic epic) throws CloneNotSupportedException {
+    public void updateEpic(Epic epic) {
         if (epic != null) {
             deleteEpic(epic.getTaskId());
             addEpic(epic);
         }
     }
 
-    public void updateSubtask(Subtask subtask) throws CloneNotSupportedException {
+    public void updateSubtask(Subtask subtask) {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
         if (epic != null) {
             deleteSubtask(subtask.getTaskId());
