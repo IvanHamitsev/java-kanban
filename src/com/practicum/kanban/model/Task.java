@@ -88,9 +88,14 @@ public class Task implements Cloneable {
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        // воспользовался стандартным приёмом клонирования, но теперь по всему коду throws CloneNotSupportedException
-        return super.clone();
+    public Object clone() {
+        // воспользовался стандартным приёмом клонирования
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException exception) {
+            exception.printStackTrace();
+        }
+        return null;
     }
 
     @Override

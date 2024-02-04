@@ -29,7 +29,7 @@ public class Subtask extends Task {
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
+    public Object clone() {
         // поверхностное копирование достаточно
         return super.clone();
     }

@@ -4,7 +4,7 @@ import com.practicum.kanban.model.*;
 import com.practicum.kanban.service.TaskManager;
 
 public class Main {
-    public static void main(String[] args) throws CloneNotSupportedException {
+    public static void main(String[] args) {
         System.out.println("Поехали!");
         TaskManager manager = new TaskManager();
 
