@@ -25,6 +25,8 @@ public class Main {
         sub1.setParentId(epic1.getTaskId());
         sub2.setParentId(epic1.getTaskId());
         sub3.setParentId(epic2.getTaskId());
+        sub4.setParentId(epic2.getTaskId());
+        sub5.setParentId(epic2.getTaskId());
         sub6.setParentId(epic2.getTaskId());
 
         manager.addTask(task1);
@@ -35,14 +37,9 @@ public class Main {
         manager.addSubtask(sub1);
         manager.addSubtask(sub2);
         manager.addSubtask(sub3);
-
-        // другой способ добавить подзадачу
-        manager.addSubtask(epic2.getTaskId(), sub4);
-        manager.addSubtask(epic2.getTaskId(), sub5);
-        manager.addSubtask(epic2.getTaskId(), sub6);
-
-        // добавить идентичную подзадачу
-        manager.addSubtask(epic2.getTaskId(), sub1);
+        manager.addSubtask(sub4);
+        manager.addSubtask(sub5);
+        manager.addSubtask(sub6);
 
         System.out.println(manager.getTask(task2.getTaskId()));
         System.out.println(manager);
@@ -53,9 +50,8 @@ public class Main {
         manager.deleteAllTasks();
 
         // удалить подзадачи, влияя на статус эпика
-        manager.deleteSubtask(epic1.getTaskId(), sub1.getTaskId());
-        manager.deleteSubtask(sub1.getTaskId()); // теперь подзадача sub1 найдётся в epic2
-        manager.deleteSubtask(sub3);
+        manager.deleteSubtask(sub1.getTaskId());
+        manager.deleteSubtask(sub3.getTaskId());
 
         System.out.println(manager);
 
@@ -70,11 +66,14 @@ public class Main {
         System.out.println(manager.getEpic(epic2.getTaskId()));
 
         // целиком удалить эпик
-        manager.deleteEpic(100); // попробуем неверный id
-        manager.deleteEpic(epic1.getTaskId()); // верный id
+        //manager.deleteEpic(100); // попробуем неверный id
+        //manager.deleteEpic(epic1.getTaskId()); // верный id
 
         // удалить подзадачи эпика
         manager.deleteSubtasks(epic2.getTaskId());
+
+        // удалить последнюю подзадачу эпика
+        manager.deleteSubtask(sub2.getTaskId());
 
         System.out.println(manager);
     }

@@ -23,16 +23,6 @@ public class TaskManager {
         return res;
     }
 
-    public HashMap<Integer, Subtask> grtSubtaskList(Integer epicId) {
-        HashMap<Integer, Subtask> result = null;
-        Epic epic = epicList.get(epicId);
-        if (null != epic) {
-            // не нужно проверять на null Subtask, он проинициализирован при созадании
-            result = (HashMap<Integer, Subtask>) epic.getSubtasks().clone();
-        }
-        return result;
-    }
-
     // b. Удаление всех задач.
     public void deleteAllTasks() {
         taskList.clear();
@@ -104,24 +94,15 @@ public class TaskManager {
         }
     }
 
-    // добавление Subtask если указан эпик
-    public void addSubtask(Integer epicId, Subtask subtask) throws CloneNotSupportedException {
-        Epic epic = epicList.get(epicId);
-        if (null != epic) {
+    public void addSubtask(Subtask subtask) throws CloneNotSupportedException {
+        Epic epic = (Epic) epicList.get(subtask.getParentId());
+        if (epic != null) {
             Subtask newSubtask = (Subtask) subtask.clone();
             // клонирование не проставляет ссылки, проставим их
             newSubtask.setParentId(epic.getTaskId());
             epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
             // обновить статус эпика
             calcStatusAdd(epic, newSubtask.getStatus());
-        }
-    }
-
-    // добавление Subtask если не указан эпик
-    public void addSubtask(Subtask subtask) throws CloneNotSupportedException {
-        Epic epic = (Epic) epicList.get(subtask.getParentId());
-        if (epic != null) {
-            addSubtask(epic.getTaskId(), subtask);
         }
     }
 
@@ -136,14 +117,14 @@ public class TaskManager {
     public void updateEpic(Epic epic) throws CloneNotSupportedException {
         if (epic != null) {
             deleteEpic(epic.getTaskId());
-            addTask(epic);
+            addEpic(epic);
         }
     }
 
     public void updateSubtask(Subtask subtask) throws CloneNotSupportedException {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
         if (epic != null) {
-            deleteSubtask(epic.getTaskId(), subtask.getTaskId());
+            deleteSubtask(subtask.getTaskId());
             addSubtask(subtask);
             // пересчёты статусов есть внутри функций
         }
@@ -158,31 +139,12 @@ public class TaskManager {
         epicList.remove(taskId);
     }
 
-    // с указанием эпика
-    public void deleteSubtask(Integer epicId, Integer subtaskId) {
-        Epic epic = (Epic) epicList.get(epicId);
-        if (null != epic) {
-            Status status = epic.getSubtasks().get(subtaskId).getStatus();
-            epic.getSubtasks().remove(subtaskId);
-            calcStatusRemove(epic, status);
-        }
-    }
-
-    // без указания эпика зная объект Subtask
-    public void deleteSubtask(Subtask subtask) {
-        Epic epic = (Epic) epicList.get(subtask.getParentId());
-        if (null != epic) {
-            Status status = epic.getSubtasks().get(subtask.getTaskId()).getStatus();
-            epic.getSubtasks().remove(subtask.getTaskId());
-            calcStatusRemove(epic, status);
-        }
-    }
-
-    // без указания эпика зная subtaskId
     public void deleteSubtask(Integer subtaskId) {
         for (Epic epic : epicList.values()) {
-            Task deletedSubtask = epic.getSubtasks().remove(subtaskId);
-            if (null != deletedSubtask) {
+            if (null != epic.getSubtasks().get(subtaskId)) {
+                Status status = epic.getSubtasks().get(subtaskId).getStatus();
+                epic.getSubtasks().remove(subtaskId);
+                calcStatusRemove(epic, status);
                 // выход - удаляем лишь первое вхождение
                 return;
             }
@@ -221,6 +183,10 @@ public class TaskManager {
     }
 
     private void calcStatusRemove(Epic epic, Status status) {
+        // если подзадач не осталось статус NEW
+        if (epic.getSubtasks().isEmpty()) {
+            epic.setStatus(Status.NEW);
+        }
         if (epic.getSubtasks().size() == 1) {
             // единственная оставшаяся подзадача эпика определит его статус
             for (Subtask subtask : epic.getSubtasks().values()) {

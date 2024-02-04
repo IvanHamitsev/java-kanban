@@ -1,9 +1,0 @@
-
-m
-java:S1206J"PThis class overrides "equals()" and should therefore also override "hashCode()".(ЌЬСг8МТиШЦ1
-K
-java:S1905L")Remove this unnecessary cast to "Object".(ОГЊЫэяяяя8ЫТиШЦ1
-c
-java:S1126T"AReplace this if-then-else statement by a single return statement.(ёђі’яяяяя8ЫТиШЦ1
-p
-java:S2975["SRemove this "clone" implementation; use a copy constructor or copy factory instead.(ЇбСл8ЄЏћЩЦ1
