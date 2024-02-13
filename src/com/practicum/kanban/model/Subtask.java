@@ -4,6 +4,9 @@ public class Subtask extends Task {
     // id эпика, к которому принадлежит подзадача
     private Integer parentId;
 
+    public Subtask() {
+        super();
+    }
     public Subtask(String name) {
         super(name);
     }

@@ -1,12 +1,14 @@
 package com.practicum.kanban;
 
 import com.practicum.kanban.model.*;
-import com.practicum.kanban.service.TaskManager;
+import com.practicum.kanban.service.*;
 
 public class Main {
     public static void main(String[] args) {
         System.out.println("Поехали!");
-        TaskManager manager = new TaskManager();
+
+        Managers manager = new Managers();
+        TaskManager taskManager = manager.getDefault();
 
         Task task1 = new Task("Задача1", "Описание1");
         Task task2 = new Task("Задача2", "Описание2", Status.DONE);
@@ -21,60 +23,59 @@ public class Main {
         Subtask sub5 = new Subtask("Подзад5", "ПодзадОписание5", Status.DONE);
         Subtask sub6 = new Subtask("Подзад6", "ПодзадОписание6", Status.DONE);
 
+        int task1Id = taskManager.addTask(task1);
+        int epic1Id = taskManager.addEpic(epic1);
+        int epic2Id = taskManager.addEpic(epic2);
+        int task2Id = taskManager.addTask(task2);
+
         // надо подготовить subtask
-        sub1.setParentId(epic1.getTaskId());
-        sub2.setParentId(epic1.getTaskId());
-        sub3.setParentId(epic2.getTaskId());
-        sub4.setParentId(epic2.getTaskId());
-        sub5.setParentId(epic2.getTaskId());
-        sub6.setParentId(epic2.getTaskId());
+        sub1.setParentId(epic1Id);
+        sub2.setParentId(epic1Id);
+        sub3.setParentId(epic2Id);
+        sub4.setParentId(epic2Id);
+        sub5.setParentId(epic2Id);
+        sub6.setParentId(epic2Id);
 
-        manager.addTask(task1);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        manager.addTask(task2);
+        int sub1Id = taskManager.addSubtask(sub1);
+        int sub2Id = taskManager.addSubtask(sub2);
+        int sub3Id = taskManager.addSubtask(sub3);
+        int sub4Id = taskManager.addSubtask(sub4);
+        int sub5Id = taskManager.addSubtask(sub5);
+        int sub6Id = taskManager.addSubtask(sub6);
 
-        manager.addSubtask(sub1);
-        manager.addSubtask(sub2);
-        manager.addSubtask(sub3);
-        manager.addSubtask(sub4);
-        manager.addSubtask(sub5);
-        manager.addSubtask(sub6);
-
-        System.out.println(manager.getTask(task2.getTaskId()));
-        System.out.println(manager);
+        System.out.println(taskManager.getTask(task2Id));
+        System.out.println(taskManager);
 
         // удалить задачу
-        manager.deleteTask(task1.getTaskId());
+        taskManager.deleteTask(task1Id);
         // удалить целиком все задачи
-        manager.deleteAllTasks();
+        taskManager.deleteAllTasks();
 
         // удалить подзадачи, влияя на статус эпика
-        manager.deleteSubtask(sub1.getTaskId());
-        manager.deleteSubtask(sub3.getTaskId());
+        taskManager.deleteSubtask(sub1Id);
+        taskManager.deleteSubtask(sub3Id);
 
-        System.out.println(manager);
+        System.out.println(taskManager);
 
         // поменяем статус подзадачи
         sub5.setStatus(Status.IN_PROGRESS);
         sub6.setStatus(Status.IN_PROGRESS);
-        // вот так не получится - у sub5 не заполнен parentId
-        manager.updateSubtask(sub5);
-        // вот так получится - у sub6 заполнен parentId
-        manager.updateSubtask(sub6);
+        taskManager.updateSubtask(sub5);
+        taskManager.updateSubtask(sub6);
 
-        System.out.println(manager.getEpic(epic2.getTaskId()));
-
-        // целиком удалить эпик
-        //manager.deleteEpic(100); // попробуем неверный id
-        //manager.deleteEpic(epic1.getTaskId()); // верный id
+        System.out.println(taskManager.getEpic(epic2Id));
 
         // удалить подзадачи эпика
-        manager.deleteSubtasks(epic2.getTaskId());
+        taskManager.deleteSubtasks(epic2Id);
 
         // удалить последнюю подзадачу эпика
-        manager.deleteSubtask(sub2.getTaskId());
+        taskManager.deleteSubtask(sub2Id);
 
-        System.out.println(manager);
+        System.out.println(taskManager);
+
+        for (Task task : taskManager.getHistory()) {
+            //System.out.println(task.getName());
+            System.out.println(task);
+        }
     }
 }
