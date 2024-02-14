@@ -3,12 +3,13 @@ package com.practicum.kanban.service;
 import com.practicum.kanban.model.*;
 
 import java.util.List;
-import java.util.HashMap;
+import java.util.Map;
 
 public interface TaskManager {
     // a. Получение списка всех задач.
-    public HashMap<Integer, Task> getTaskList();
-    public HashMap<Integer, Epic> getEpicList();
+    public Map<Integer, Task> getTaskList();
+    public Map<Integer, Epic> getEpicList();
+    public Map<Integer, Subtask> getSubtaskList(Integer epicId);
 
     // b. Удаление всех задач.
     public void deleteAllTasks();
@@ -35,10 +36,6 @@ public interface TaskManager {
     public void deleteEpic(Integer taskId);
     public void deleteSubtask(Integer subtaskId);
 
-    // Дополнительные методы:
-    // a. Получение списка всех подзадач определённого эпика.
-    public HashMap<Integer, Subtask> getSubtaskList(Integer epicId);
-
-    // почему бы и классу InMemoryTaskManager не уметь возвращать свою историю?
+    // История операций получения всех типов задач
     public List<Task> getHistory();
 }

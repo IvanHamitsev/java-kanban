@@ -17,8 +17,7 @@ class InMemoryHistoryManagerTest {
     @BeforeAll
     static void prepareManager()
     {
-        Managers manager = new Managers();
-        taskManager = manager.getDefault();
+        taskManager = Managers.getDefault();
     }
     @AfterEach
     void clearManager() {
@@ -42,19 +41,48 @@ class InMemoryHistoryManagerTest {
 
         assertTrue(taskManager.getHistory().isEmpty());
 
-        task = taskManager.getTask(taskId);
+        taskManager.getTask(taskId);
         List list =  taskManager.getHistory();
 
         assertEquals(list.size(), 1, "в истории должен быть один таск");
 
-        epic = taskManager.getEpic(epicId);
+        taskManager.getEpic(epicId);
         list =  taskManager.getHistory();
 
         assertEquals(list.size(), 2, "в истории должен быть таск и эпик");
 
-        sub = taskManager.getSubtask(subtaskId);
+        taskManager.getSubtask(subtaskId);
         list =  taskManager.getHistory();
 
         assertEquals(list.size(), 3, "в истории должен быть таск, эпик и сабтаск");
+
+        // поменяем задачи в taskManager (ещё +3 элемента в истории)
+        Task getTask = taskManager.getTask(taskId);
+        Epic getEpic = taskManager.getEpic(epicId);
+        Subtask getSubtask = taskManager.getSubtask(subtaskId);
+
+        getTask.setName("Другое имя задачи");
+        getEpic.setName("Другое имя эпика");
+        getSubtask.setName("Другое имя подзадачи");
+
+        taskManager.updateTask(getTask);
+        taskManager.updateEpic(getEpic);
+        taskManager.updateSubtask(getSubtask);
+
+        // проверим, что имена объектов в taskManager и History теперь разные
+        list =  taskManager.getHistory();
+
+        assertEquals(list.size(), 6);
+        String historyName4 = ((Task)list.get(3)).getName();
+        String historyName5 = ((Task)list.get(4)).getName();
+        String historyName6 = ((Task)list.get(5)).getName();
+
+        String managerName1 = taskManager.getSubtask(subtaskId).getName();
+        String managerName2 = taskManager.getEpic(epicId).getName();
+        String managerName3 = taskManager.getTask(taskId).getName();
+
+        assertFalse(historyName4.equals(managerName1));
+        assertFalse(historyName5.equals(managerName2));
+        assertFalse(historyName6.equals(managerName3));
     }
 }

@@ -2,6 +2,7 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.*;
 
+import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
@@ -13,22 +14,32 @@ public class InMemoryTaskManager implements TaskManager {
 
     private HistoryManager historyManager;
 
-    // a. Получение списка всех задач.
-    public HashMap<Integer, Task> getTaskList() {
-        // не хочу отдавать сам список, отдадим его копию, чтобы не вмешались в оригинал
-        HashMap<Integer, Task> res = (HashMap<Integer, Task>) taskList.clone();
-        return res;
-    }
-
-    public HashMap<Integer, Epic> getEpicList() {
-        // отдать копию
-        HashMap<Integer, Epic> res = (HashMap<Integer, Epic>) epicList.clone();
-        return res;
-    }
-
     public InMemoryTaskManager() {
-        Managers manager = new Managers();
-        historyManager = manager.getDefaultHistory();
+        historyManager = Managers.getDefaultHistory();
+    }
+
+    // a. Получение списка всех задач.
+    public Map<Integer, Task> getTaskList() {
+        // не хочу отдавать сам список, отдадим его копию, чтобы не вмешались в оригинал
+        Map<Integer, Task> res = (Map) taskList.clone();
+        return res;
+    }
+
+    public Map<Integer, Epic> getEpicList() {
+        // отдать копию
+        Map<Integer, Epic> res = (Map) epicList.clone();
+        return res;
+    }
+
+    // Получение списка всех подзадач определённого эпика.
+    @Override
+    public Map<Integer, Subtask> getSubtaskList(Integer epicId) {
+        Map<Integer, Subtask> result = null;
+        Epic epic = (Epic) epicList.get(epicId);
+        if (null != epic) {
+            result = (Map) epic.getSubtasks().clone();
+        }
+        return result;
     }
 
     // b. Удаление всех задач.
@@ -53,21 +64,26 @@ public class InMemoryTaskManager implements TaskManager {
     // c. Получение по идентификатору.
     @Override
     public Task getTask(Integer taskId) {
-        if (taskList.get(taskId) != null) {
+        Task task = taskList.get(taskId);
+        if (task != null) {
             // добавляем в историю копию объекта
             // минус такого подхода - в истории объекты теряют актуальность
-            Task newTask = new Task(taskList.get(taskId));
+            Task newTask = new Task(task);
             historyManager.add(newTask);
             // возвращаем копию объекта
+            // уязвимость: возвращаю пользователю тот же объект, что положил в историю, пользователь может сломать историю
+            // пути выхода: делать две копии. Одну для истории, вторую для пользователя.
+            // посчитал несущественным, вторую копию не делаю.
             return newTask;
         }
         return null;
     }
     @Override
     public Epic getEpic(Integer taskId) {
-        if (epicList.get(taskId) != null) {
+        Epic epic = epicList.get(taskId);
+        if (epic != null) {
             // отдаём и добавляем в историю копию объекта
-            Epic newEpic = new Epic(epicList.get(taskId));
+            Epic newEpic = new Epic(epic);
             historyManager.add(newEpic); // неявное преобразование типов
             return newEpic;
         }
@@ -76,9 +92,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Subtask getSubtask(Integer taskId) {
         for (Epic epic : epicList.values()) {
-            Subtask result = epic.getSubtasks().get(taskId);
-            if (null != result) {
-                Subtask newSubtask = new Subtask(result);
+            Subtask subtask = epic.getSubtasks().get(taskId);
+            if (null != subtask) {
+                Subtask newSubtask = new Subtask(subtask);
                 historyManager.add(newSubtask); // неявное преобразование типов
                 return newSubtask;
             }
@@ -169,18 +185,13 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    // Дополнительные методы:
-    // a. Получение списка всех подзадач определённого эпика.
+    // Истории последних операций получения задач/эпиков/подзадач
     @Override
-    public HashMap<Integer, Subtask> getSubtaskList(Integer epicId) {
-        HashMap<Integer, Subtask> result = null;
-        Epic epic = (Epic) epicList.get(epicId);
-        if (null != epic) {
-            result = (HashMap<Integer, Subtask>) epic.getSubtasks().clone();
-        }
-        return result;
+    public List<Task> getHistory() {
+        return historyManager.getHistory();
     }
 
+    // Дополнительные методы:
     // пересчёт статуса с учётом изменения
     private void calcStatusAdd(Epic epic, Status status) {
         if (epic.getSubtasks().size() == 1) {
@@ -259,11 +270,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-
-    @Override
-    public List<Task> getHistory() {
-        return historyManager.getHistory();
-    }
     @Override
     public String toString() {
         String res = "TaskManager{\n";

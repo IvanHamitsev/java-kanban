@@ -7,8 +7,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Поехали!");
 
-        Managers manager = new Managers();
-        TaskManager taskManager = manager.getDefault();
+        TaskManager taskManager = Managers.getDefault();
 
         Task task1 = new Task("Задача1", "Описание1");
         Task task2 = new Task("Задача2", "Описание2", Status.DONE);
