@@ -2,11 +2,9 @@ package com.practicum.kanban.service;
 
 public class Managers {
     public static TaskManager getDefault() {
-        TaskManager memoryTaskManager = new InMemoryTaskManager();
-        return memoryTaskManager;
+        return new InMemoryTaskManager();
     }
     public static HistoryManager getDefaultHistory() {
-        HistoryManager memoryHistoryManager = new InMemoryHistoryManager(10);
-        return memoryHistoryManager;
+        return new InMemoryHistoryManager(10);
     }
 }

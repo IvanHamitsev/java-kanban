@@ -2,6 +2,7 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.*;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -67,14 +68,9 @@ public class InMemoryTaskManager implements TaskManager {
         Task task = taskList.get(taskId);
         if (task != null) {
             // добавляем в историю копию объекта
-            // минус такого подхода - в истории объекты теряют актуальность
-            Task newTask = new Task(task);
-            historyManager.add(newTask);
-            // возвращаем копию объекта
-            // уязвимость: возвращаю пользователю тот же объект, что положил в историю, пользователь может сломать историю
-            // пути выхода: делать две копии. Одну для истории, вторую для пользователя.
-            // посчитал несущественным, вторую копию не делаю.
-            return newTask;
+            historyManager.add(new Task(task));
+            // и возвращаем копию объекта
+            return new Task(task);
         }
         return null;
     }
@@ -83,9 +79,8 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epicList.get(taskId);
         if (epic != null) {
             // отдаём и добавляем в историю копию объекта
-            Epic newEpic = new Epic(epic);
-            historyManager.add(newEpic); // неявное преобразование типов
-            return newEpic;
+            historyManager.add(new Epic(epic)); // неявное преобразование типов
+            return new Epic(epic);
         }
         return null;
     }
@@ -94,9 +89,8 @@ public class InMemoryTaskManager implements TaskManager {
         for (Epic epic : epicList.values()) {
             Subtask subtask = epic.getSubtasks().get(taskId);
             if (null != subtask) {
-                Subtask newSubtask = new Subtask(subtask);
-                historyManager.add(newSubtask); // неявное преобразование типов
-                return newSubtask;
+                historyManager.add(new Subtask(subtask));
+                return new Subtask(subtask);
             }
         }
         return null;
@@ -125,15 +119,17 @@ public class InMemoryTaskManager implements TaskManager {
     }
     @Override
     public int addSubtask(Subtask subtask) {
-        Epic epic = (Epic) epicList.get(subtask.getParentId());
-        if (epic != null) {
-            Subtask newSubtask = new Subtask(subtask);
-            // клонирование не проставляет ссылки, проставим их
-            newSubtask.setParentId(epic.getTaskId());
-            epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
-            // обновить статус эпика
-            calcStatusAdd(epic, newSubtask.getStatus());
-            return newSubtask.getTaskId();
+        if (subtask != null) {
+            Epic epic = (Epic) epicList.get(subtask.getParentId());
+            if (epic != null) {
+                Subtask newSubtask = new Subtask(subtask);
+                // клонирование не проставляет ссылки, проставим их
+                newSubtask.setParentId(epic.getTaskId());
+                epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
+                // обновить статус эпика
+                calcStatusAdd(epic, newSubtask.getStatus());
+                return newSubtask.getTaskId();
+            }
         }
         return -1;
     }
@@ -188,7 +184,7 @@ public class InMemoryTaskManager implements TaskManager {
     // Истории последних операций получения задач/эпиков/подзадач
     @Override
     public List<Task> getHistory() {
-        return historyManager.getHistory();
+        return List.copyOf(historyManager.getHistory());
     }
 
     // Дополнительные методы:

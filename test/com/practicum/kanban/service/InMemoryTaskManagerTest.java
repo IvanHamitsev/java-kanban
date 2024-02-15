@@ -30,8 +30,12 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void canAddTask() {
+
+        int taskId = taskManager.addTask(null);
+        assertTrue(taskId < 0);
+
         Task task = new Task("Задача", "Описание");
-        int taskId = taskManager.addTask(task);
+        taskId = taskManager.addTask(task);
 
         assertTrue(taskId > 0);
         Task getTask = taskManager.getTask(taskId);
@@ -42,8 +46,11 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void canAddEpic() {
+        int taskId = taskManager.addEpic(null);
+        assertTrue(taskId < 0);
+
         Epic epic = new Epic("Эпик", "Описание");
-        int taskId = taskManager.addEpic(epic);
+        taskId = taskManager.addEpic(epic);
 
         assertTrue(taskId > 0);
         Epic getEpic = taskManager.getEpic(taskId);
@@ -54,13 +61,17 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void canAddSubtask() {
+
+        int subtaskId = taskManager.addSubtask(null);
+        assertTrue(subtaskId < 0);
+
         Epic epic = new Epic("Эпик", "Описание");
         Subtask sub = new Subtask("Подзадача", "Описание");
         int epicId = taskManager.addEpic(epic);
 
         assertTrue(epicId > 0);
         sub.setParentId(epicId);
-        int subtaskId = taskManager.addSubtask(sub);
+        subtaskId = taskManager.addSubtask(sub);
 
         assertTrue(subtaskId > 0);
         Subtask getSubtask = taskManager.getSubtask(subtaskId);
