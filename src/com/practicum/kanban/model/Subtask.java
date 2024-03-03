@@ -37,6 +37,11 @@ public class Subtask extends Task {
     }
 
     @Override
+    public Subtask copy() {
+        return new Subtask(this);
+    }
+
+    @Override
     public String toString() {
         return "Subtask{" +
                 "id=" + id +

@@ -1,5 +1,8 @@
 package com.practicum.kanban.service;
 
+import com.practicum.kanban.model.NonRepeatRingBuffer;
+import com.practicum.kanban.model.RepeatRingBuffer;
+import com.practicum.kanban.model.RingBuffer;
 import com.practicum.kanban.model.Task;
 
 import java.util.ArrayList;
@@ -8,11 +11,11 @@ import java.util.List;
 public class InMemoryHistoryManager implements HistoryManager {
 
     // хранилище
-    private TaskRingBuffer historyStorage;
+    private RingBuffer<Task> historyStorage;
     // получить последние 10 просмотренных задач
 
     public InMemoryHistoryManager(int size) {
-        historyStorage = new TaskRingBuffer(size);
+        historyStorage = Managers.getDefaultHistoryStorage(size);
     }
 
     // Есть два подхода. Можно сразу класть на хранение копии объектов или делать копии при выдаче истории.

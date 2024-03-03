@@ -29,7 +29,7 @@ class InMemoryHistoryManagerTest {
         assertNotNull(taskManager);
     }
     @Test
-    void canAddHistory() {
+    void canAddNonRepeatHistory() {
         Task task = new Task("Задача", "Описание");
         Epic epic = new Epic("Эпик", "Описание");
         Subtask sub = new Subtask("Подзадача", "Описание");
@@ -72,17 +72,19 @@ class InMemoryHistoryManagerTest {
         // проверим, что имена объектов в taskManager и History теперь разные
         list =  taskManager.getHistory();
 
-        assertEquals(list.size(), 6);
-        String historyName4 = ((Task)list.get(3)).getName();
-        String historyName5 = ((Task)list.get(4)).getName();
-        String historyName6 = ((Task)list.get(5)).getName();
+        // история без повторов - по-прежменму только три различных ID
+        assertEquals(list.size(), 3);
+
+        String historyName1 = ((Task)list.get(0)).getName();
+        String historyName2 = ((Task)list.get(1)).getName();
+        String historyName3 = ((Task)list.get(2)).getName();
 
         String managerName1 = taskManager.getSubtask(subtaskId).getName();
         String managerName2 = taskManager.getEpic(epicId).getName();
         String managerName3 = taskManager.getTask(taskId).getName();
 
-        assertFalse(historyName4.equals(managerName1));
-        assertFalse(historyName5.equals(managerName2));
-        assertFalse(historyName6.equals(managerName3));
+        assertFalse(historyName1.equals(managerName1));
+        assertFalse(historyName2.equals(managerName2));
+        assertFalse(historyName3.equals(managerName3));
     }
 }

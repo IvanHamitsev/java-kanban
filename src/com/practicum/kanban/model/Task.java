@@ -12,7 +12,7 @@ public class Task {
     public Task() {
         // автоинкрементное поле даст уникальность экземпляров
         tasksCount++;
-        // простейшая генерация уникального taskHashNumber
+        // простейшая генерация уникального ID
         id = tasksCount;
     }
 
@@ -75,6 +75,10 @@ public class Task {
 
     public void setTaskId(int taskHashNumber) {
         this.id = taskHashNumber;
+    }
+
+    public Task copy() {
+        return new Task(this);
     }
 
     @Override

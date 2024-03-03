@@ -26,7 +26,9 @@ public class Epic extends Task {
     public Epic(Epic in) {
         super(in);
         for (Subtask subtask : in.getSubtasks().values()) {
-            subtasks.put(subtask.getTaskId(), subtask);
+            // добавить в наш Map копию subtask
+            Subtask newSubtask = subtask.copy();
+            subtasks.put(newSubtask.getTaskId(), newSubtask);
         }
     }
 
@@ -38,6 +40,10 @@ public class Epic extends Task {
         subtasks.put(subtask.getTaskId(), subtask);
     }
 
+    @Override
+    public Epic copy() {
+        return new Epic(this);
+    }
     @Override
     public String toString() {
         String res = "Epic{" +

@@ -2,12 +2,9 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.*;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
-public class InMemoryTaskManager implements TaskManager {
+public class InMemoryTaskManager implements TaskManager, Cloneable {
     // Класс хранит только Task и Epic
     // Подзадачи каждый Epic хранит самостоятельно
     private HashMap<Integer, Task> taskList = new HashMap<>();
@@ -184,7 +181,8 @@ public class InMemoryTaskManager implements TaskManager {
     // Истории последних операций получения задач/эпиков/подзадач
     @Override
     public List<Task> getHistory() {
-        return List.copyOf(historyManager.getHistory());
+        // заменил .copyOf() на Collections.unmodifiableList поскольку метод get и так делает копию
+        return Collections.unmodifiableList(historyManager.getHistory());
     }
 
     // Дополнительные методы:

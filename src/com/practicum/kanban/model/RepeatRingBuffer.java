@@ -1,23 +1,28 @@
-package com.practicum.kanban.service;
+package com.practicum.kanban.model;
 
-import com.practicum.kanban.model.Task;
+import java.util.Comparator;
 
-// Класс реализует кольцевой буфер для хранения size элементов истории, затирая их по кругу при добавлении
-public class TaskRingBuffer {
-    private Task[] source;
+public class RepeatRingBuffer<T extends Task> implements RingBuffer<T> {
+    private T[] source;
     // счётчик занятых элементов от 0 до size
     private int counter;
     // указатель на записываемый элемент
     private int writePointer;
 
-    public TaskRingBuffer(int size) {
-        source = new Task[size];
+    public RepeatRingBuffer(int size) {
+        if (size > 1) {
+            source = (T[]) new Task[size];
+        }
         counter = 0;
         writePointer = 0;
     }
-
+    public void clear() {
+        counter = 0;
+        writePointer = 0;
+    }
     // нужно, чтобы знать, как вычитывать буфер
     public boolean ifFull() {
+        Comparator<String> comp = String.CASE_INSENSITIVE_ORDER;
         if (counter < source.length) {
             return false;
         } else {
@@ -25,11 +30,11 @@ public class TaskRingBuffer {
         }
     }
 
-    public void put(Task newTask) {
+    public void put(T newElement) {
         if (writePointer == source.length) {
             writePointer = 0;
         }
-        source[writePointer] = newTask;
+        source[writePointer] = newElement;
         writePointer++;
         if (counter < source.length) {
             counter++;
@@ -37,7 +42,7 @@ public class TaskRingBuffer {
     }
     // получить элемент "возрастом" age. age = 1 самый новый, age = size самый старый, больше нельзя
     // метод будет удобен, чтобы в цикле получать элементы
-    public Task get(int age) {
+    public T get(int age) {
         if ((age > source.length)||(age < 1)) {
             return null;
         }
@@ -45,7 +50,9 @@ public class TaskRingBuffer {
         if  (counter < source.length) {
             //если буфер ещё не полон, проходить по кругу нельзя, элементы лежат от 0 до writePointer
             if (point >= 0) {
-                return source[point];
+                // вернуть копию сущности
+                return (T)source[point].copy();
+                //return (T)source[point];
             } else {
                 return null;
             }
@@ -54,7 +61,8 @@ public class TaskRingBuffer {
                 // всё нормально, мы прошли по кругу
                 point += source.length;
             }
-            return source[point];
+            return (T)source[point].copy();
+            //return (T)source[point];
         }
     }
 }
