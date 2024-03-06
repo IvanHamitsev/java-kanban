@@ -15,17 +15,20 @@ class RepeatRingBufferTest {
             ringBuffer.put(tasks[i]);
         }
     }
+
     @BeforeAll
     static void prepareTests() {
         tasks = new Task[20];
         for (int i = 0; i < 20; i++) {
-            tasks[i] = new Task("Задача " + (i+1), "Описание " + (i+1));
+            tasks[i] = new Task("Задача " + (i + 1), "Описание " + (i + 1));
         }
     }
+
     @BeforeEach
     void cleanBuffer() {
         ringBuffer.clear();
     }
+
     @Test
     void canPutTask() {
         ringBuffer.put(tasks[0]);

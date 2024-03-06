@@ -18,12 +18,14 @@ public class NonRepeatRingBuffer<T extends Task> implements HistoryStorage<T> {
         writePointer = 0;
         this.size = size;
     }
+
     @Override
     public void clear() {
         counter = 0;
         writePointer = 0;
         source.clear();
     }
+
     public boolean ifFull() {
         if (counter < size) {
             return false;
@@ -41,7 +43,7 @@ public class NonRepeatRingBuffer<T extends Task> implements HistoryStorage<T> {
 
             if (writePointer > source.size()) {
                 // на границе List-а получается особый случай, нет сдвига элементов
-                source.add(writePointer-1, newElement);
+                source.add(writePointer - 1, newElement);
             } else {
                 source.add(writePointer, newElement);
                 writePointer++;

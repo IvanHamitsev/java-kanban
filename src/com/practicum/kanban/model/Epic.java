@@ -4,9 +4,11 @@ import java.util.HashMap;
 
 public class Epic extends Task {
     private HashMap<Integer, Subtask> subtasks = new HashMap<>();
+
     public Epic() {
         super();
     }
+
     public Epic(String name) {
         super(name);
     }
@@ -44,6 +46,7 @@ public class Epic extends Task {
     public Epic copy() {
         return new Epic(this);
     }
+
     @Override
     public String toString() {
         String res = "Epic{" +

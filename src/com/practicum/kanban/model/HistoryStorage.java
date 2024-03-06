@@ -2,9 +2,12 @@ package com.practicum.kanban.model;
 
 import java.util.List;
 
-public interface HistoryStorage<ElementType> {
+public interface HistoryStorage<T> {
     void clear();
-    void put(ElementType newElement);
+
+    void put(T newElement);
+
     void remove(int id);
-    List<ElementType> getHistory();
+
+    List<T> getHistory();
 }

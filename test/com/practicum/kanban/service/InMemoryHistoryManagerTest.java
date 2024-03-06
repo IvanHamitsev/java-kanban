@@ -4,6 +4,7 @@ import com.practicum.kanban.model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,20 +12,23 @@ import static org.junit.jupiter.api.Assertions.*;
 class InMemoryHistoryManagerTest {
 
     static TaskManager taskManager;
+
     @BeforeAll
-    static void prepareManager()
-    {
+    static void prepareManager() {
         taskManager = Managers.getDefault();
     }
+
     @AfterEach
     void clearManager() {
         taskManager.deleteAllTasks();
         taskManager.deleteAllEpics();
     }
+
     @Test
     void shouldManagerBeReady() {
         assertNotNull(taskManager);
     }
+
     @Test
     void canAddNonRepeatHistory() {
         Task task = new Task("Задача", "Описание");
@@ -39,17 +43,17 @@ class InMemoryHistoryManagerTest {
         assertTrue(taskManager.getHistory().isEmpty());
 
         taskManager.getTask(taskId);
-        List list =  taskManager.getHistory();
+        List list = taskManager.getHistory();
 
         assertEquals(list.size(), 1, "в истории должен быть один таск");
 
         taskManager.getEpic(epicId);
-        list =  taskManager.getHistory();
+        list = taskManager.getHistory();
 
         assertEquals(list.size(), 2, "в истории должен быть таск и эпик");
 
         taskManager.getSubtask(subtaskId);
-        list =  taskManager.getHistory();
+        list = taskManager.getHistory();
 
         assertEquals(list.size(), 3, "в истории должен быть таск, эпик и сабтаск");
 
@@ -58,7 +62,7 @@ class InMemoryHistoryManagerTest {
         Epic getEpic = taskManager.getEpic(epicId);
         Subtask getSubtask = taskManager.getSubtask(subtaskId);
         // (и история не должна вырасти, повторы)
-        list =  taskManager.getHistory();
+        list = taskManager.getHistory();
         assertEquals(3, list.size());
 
         getTask.setName("Другое имя задачи");
@@ -70,14 +74,14 @@ class InMemoryHistoryManagerTest {
         taskManager.updateSubtask(getSubtask);
 
         // сравним имена объектов в taskManager и History
-        list =  taskManager.getHistory();
+        list = taskManager.getHistory();
 
         // история без повторов - по-прежменму только три различных ID
         assertEquals(3, list.size());
 
-        String historyName1 = ((Task)list.get(0)).getName();
-        String historyName2 = ((Task)list.get(1)).getName();
-        String historyName3 = ((Task)list.get(2)).getName();
+        String historyName1 = ((Task) list.get(0)).getName();
+        String historyName2 = ((Task) list.get(1)).getName();
+        String historyName3 = ((Task) list.get(2)).getName();
 
         String managerName1 = taskManager.getSubtask(subtaskId).getName();
         String managerName2 = taskManager.getEpic(epicId).getName();

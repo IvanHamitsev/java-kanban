@@ -2,8 +2,6 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.HistoryStorage;
 import com.practicum.kanban.model.Task;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
@@ -15,6 +13,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     public InMemoryHistoryManager() {
         historyStorage = Managers.getDefaultHistoryStorage();
     }
+
     @Override
     public void add(Task task) {
         historyStorage.put(task);

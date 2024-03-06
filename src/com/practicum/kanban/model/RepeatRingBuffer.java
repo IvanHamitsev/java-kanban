@@ -18,10 +18,12 @@ public class RepeatRingBuffer<T extends Task> implements HistoryStorage<T> {
         counter = 0;
         writePointer = 0;
     }
+
     public void clear() {
         counter = 0;
         writePointer = 0;
     }
+
     // нужно, чтобы знать, как вычитывать буфер
     public boolean ifFull() {
         Comparator<String> comp = String.CASE_INSENSITIVE_ORDER;
@@ -64,7 +66,7 @@ public class RepeatRingBuffer<T extends Task> implements HistoryStorage<T> {
     // получить элемент "возрастом" age. age = 1 самый новый, age = size самый старый, больше нельзя
     // метод будет удобен, чтобы в цикле получать элементы
     public T get(int age) {
-        if ((age > source.length)||(age < 1)) {
+        if ((age > source.length) || (age < 1)) {
             return null;
         }
         int point = writePointer - age;
