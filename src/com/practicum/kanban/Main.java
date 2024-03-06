@@ -14,6 +14,7 @@ public class Main {
 
         Epic epic1 = new Epic("Эпик1", "ЭпикОписание1");
         Epic epic2 = new Epic("Эпик2", "ЭпикОписание2");
+        Epic epic3 = new Epic("Эпик3", "ЭпикОписание3");
 
         Subtask sub1 = new Subtask("Подзад1", "ПодзадОписание1");
         Subtask sub2 = new Subtask("Подзад2", "ПодзадОписание2", Status.DONE);
@@ -26,6 +27,7 @@ public class Main {
         int epic1Id = taskManager.addEpic(epic1);
         int epic2Id = taskManager.addEpic(epic2);
         int task2Id = taskManager.addTask(task2);
+        int epic3Id = taskManager.addEpic(epic3);
 
         // надо подготовить subtask
         sub1.setParentId(epic1Id);
@@ -42,8 +44,24 @@ public class Main {
         int sub5Id = taskManager.addSubtask(sub5);
         int sub6Id = taskManager.addSubtask(sub6);
 
-        System.out.println(taskManager.getTask(task2Id));
-        System.out.println(taskManager);
+        // спросим задачи, подзадачи, эпик
+        taskManager.getTask(task2Id);
+        taskManager.getSubtask(sub2Id);
+        taskManager.getSubtask(sub2Id);
+        taskManager.getEpic(epic2Id);
+        System.out.println("История после запросов с повтором");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
+        // спросим то же самое и в другом порядке
+        taskManager.getEpic(epic2Id);
+        taskManager.getSubtask(sub2Id);
+        taskManager.getTask(task2Id);
+        System.out.println();
+        System.out.println("История после запросов в другом порядке");
+        for (Task task : taskManager.getHistory()) {
+            System.out.println(task);
+        }
 
         // удалить задачу
         taskManager.deleteTask(task1Id);
@@ -54,6 +72,7 @@ public class Main {
         taskManager.deleteSubtask(sub1Id);
         taskManager.deleteSubtask(sub3Id);
 
+        System.out.println();
         System.out.println(taskManager);
 
         // поменяем статус подзадачи
@@ -62,6 +81,7 @@ public class Main {
         taskManager.updateSubtask(sub5);
         taskManager.updateSubtask(sub6);
 
+        System.out.println();
         System.out.println(taskManager.getEpic(epic2Id));
 
         // удалить подзадачи эпика
@@ -70,10 +90,12 @@ public class Main {
         // удалить последнюю подзадачу эпика
         taskManager.deleteSubtask(sub2Id);
 
+        System.out.println();
         System.out.println(taskManager);
 
+        System.out.println();
+        System.out.println("История после удалений");
         for (Task task : taskManager.getHistory()) {
-            //System.out.println(task.getName());
             System.out.println(task);
         }
     }

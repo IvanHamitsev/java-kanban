@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RepeatRingBufferTest {
-    private RingBuffer<Task> ringBuffer = new RepeatRingBuffer(10);
+    private RepeatRingBuffer<Task> ringBuffer = new RepeatRingBuffer(10);
     private static Task[] tasks;
 
     void fillBuffer() {

@@ -52,7 +52,7 @@ public class Epic extends Task {
         for (Task task : subtasks.values()) {
             res = res.concat(task.toString());
         }
-        res = res.concat(" " + status + " }\n");
+        res = res.concat(" " + status + " }");
         return res;
     }
 }

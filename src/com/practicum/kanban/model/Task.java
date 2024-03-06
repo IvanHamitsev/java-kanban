@@ -103,6 +103,6 @@ public class Task {
         return "Task{" +
                 "id=" + id +
                 " '" + name + '\'' +
-                " " + status + " }\n";
+                " " + status + " }";
     }
 }

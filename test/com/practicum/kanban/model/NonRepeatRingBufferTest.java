@@ -15,6 +15,7 @@ class NonRepeatRingBufferTest {
             ringBuffer.put(tasks[i]);
         }
     }
+
     @BeforeAll
     static void prepareTests() {
         tasks = new Task[20];
@@ -22,10 +23,12 @@ class NonRepeatRingBufferTest {
             tasks[i] = new Task("Задача " + i, "Описание " + i);
         }
     }
+
     @BeforeEach
     void cleanBuffer() {
         ringBuffer.clear();
     }
+
     @Test
     void canPutTask() {
         ringBuffer.put(tasks[0]);
@@ -60,6 +63,7 @@ class NonRepeatRingBufferTest {
         assertNotNull(ringBuffer.get(10), "не получен 10 элемент");
         assertNull(ringBuffer.get(11), "получен 11 элемент");
     }
+
     @Test
     void canPutRepeats() {
         // заполним хранилище
