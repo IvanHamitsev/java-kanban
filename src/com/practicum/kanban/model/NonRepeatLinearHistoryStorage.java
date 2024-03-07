@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static java.lang.Math.min;
+
 public class NonRepeatLinearHistoryStorage<T extends Task> implements HistoryStorage<T> {
-    static int nodeCounter = 0;
+    static long nodeCounter = 0;
 
     private class Node {
         Node before;
         Node after;
-        Integer time;
+        long time;
 
         T value;
 
@@ -89,8 +91,11 @@ public class NonRepeatLinearHistoryStorage<T extends Task> implements HistorySto
     public void clear() {
         head = null;
         tail = null;
+        for (Node node : linksStorage.values()) {
+            node.setPrev(null);
+            node.setNext(null);
+        }
         linksStorage.clear();
-        // поймёт ли сборщик мусора, что на объекты Node никто не ссылается, не будет ли утечки памяти?
     }
 
     @Override
@@ -118,7 +123,7 @@ public class NonRepeatLinearHistoryStorage<T extends Task> implements HistorySto
 
     @Override
     public List<T> getHistory() {
-        List<T> resultList = new ArrayList<>(nodeCounter);
+        List<T> resultList = new ArrayList<>((int) min(nodeCounter, Integer.MAX_VALUE));
         Node next = head;
         while (null != next) {
             // не забываем в List добавлять копию, а не оригинальный объект Task
