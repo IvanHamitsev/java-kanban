@@ -2,9 +2,12 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.*;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
-public class InMemoryTaskManager implements TaskManager, Cloneable {
+public class InMemoryTaskManager implements TaskManager {
     // Класс хранит только Task и Epic
     // Подзадачи каждый Epic хранит самостоятельно
     private HashMap<Integer, Task> taskList = new HashMap<>();
@@ -31,9 +34,9 @@ public class InMemoryTaskManager implements TaskManager, Cloneable {
 
     // Получение списка всех подзадач определённого эпика.
     @Override
-    public Map<Integer, Subtask> getSubtaskList(Integer epicId) {
+    public Map<Integer, Subtask> getSubtaskList(int id) {
         Map<Integer, Subtask> result = null;
-        Epic epic = (Epic) epicList.get(epicId);
+        Epic epic = (Epic) epicList.get(id);
         if (null != epic) {
             result = (Map) epic.getSubtasks().clone();
         }
@@ -45,15 +48,18 @@ public class InMemoryTaskManager implements TaskManager, Cloneable {
     public void deleteAllTasks() {
         taskList.clear();
     }
+
     @Override
     public void deleteAllEpics() {
         epicList.clear();
     }
+
     @Override
-    public void deleteSubtasks(Integer epicId) {
-        Epic epic = epicList.get(epicId);
+    public void deleteSubtasks(int id) {
+        Epic epic = epicList.get(id);
         if (null != epic) {
             epic.getSubtasks().clear();
+            historyManager.remove(id);
             // обновить статус эпика
             epic.setStatus(Status.NEW);
         }
@@ -61,33 +67,35 @@ public class InMemoryTaskManager implements TaskManager, Cloneable {
 
     // c. Получение по идентификатору.
     @Override
-    public Task getTask(Integer taskId) {
-        Task task = taskList.get(taskId);
+    public Task getTask(int id) {
+        Task task = taskList.get(id);
         if (task != null) {
             // добавляем в историю копию объекта
-            historyManager.add(new Task(task));
+            historyManager.add(task.copy());
             // и возвращаем копию объекта
             return new Task(task);
         }
         return null;
     }
+
     @Override
-    public Epic getEpic(Integer taskId) {
-        Epic epic = epicList.get(taskId);
+    public Epic getEpic(int id) {
+        Epic epic = epicList.get(id);
         if (epic != null) {
             // отдаём и добавляем в историю копию объекта
-            historyManager.add(new Epic(epic)); // неявное преобразование типов
+            historyManager.add(epic.copy());
             return new Epic(epic);
         }
         return null;
     }
+
     @Override
-    public Subtask getSubtask(Integer taskId) {
+    public Subtask getSubtask(int id) {
         for (Epic epic : epicList.values()) {
-            Subtask subtask = epic.getSubtasks().get(taskId);
+            Subtask subtask = epic.getSubtasks().get(id);
             if (null != subtask) {
-                historyManager.add(new Subtask(subtask));
-                return new Subtask(subtask);
+                historyManager.add(subtask.copy());
+                return subtask.copy();
             }
         }
         return null;
@@ -98,31 +106,46 @@ public class InMemoryTaskManager implements TaskManager, Cloneable {
     public int addTask(Task task) {
         // добавим копию полученной задачи, чтобы у пользователя не оставалось ссылки для
         // несанкционированного доступа
-        if ((task != null)&&(task.getClass() == Task.class)) {
-            Task newTask = new Task(task);
-            taskList.put(newTask.getTaskId(), newTask);
+        if ((task != null) && (task.getClass() == Task.class)) {
+            Task newTask = task.copy();
+            // в случае, если задача существует - обновим её
+            if (taskList.containsKey(newTask.getTaskId())) {
+                taskList.replace(newTask.getTaskId(), newTask);
+            } else {
+                taskList.put(newTask.getTaskId(), newTask);
+            }
             return newTask.getTaskId();
         }
         return -1;
     }
+
     @Override
     public int addEpic(Epic epic) {
         if (epic != null) {
-            Epic newEpic = new Epic(epic);
-            epicList.put(newEpic.getTaskId(), newEpic);
+            Epic newEpic = epic.copy();
+            if (epicList.containsKey(newEpic.getTaskId())) {
+                epicList.replace(newEpic.getTaskId(), newEpic);
+            } else {
+                epicList.put(newEpic.getTaskId(), newEpic);
+            }
             return newEpic.getTaskId();
         }
         return -1;
     }
+
     @Override
     public int addSubtask(Subtask subtask) {
         if (subtask != null) {
             Epic epic = (Epic) epicList.get(subtask.getParentId());
             if (epic != null) {
-                Subtask newSubtask = new Subtask(subtask);
+                Subtask newSubtask = subtask.copy();
                 // клонирование не проставляет ссылки, проставим их
                 newSubtask.setParentId(epic.getTaskId());
-                epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
+                if (epic.getSubtasks().containsKey(newSubtask.getTaskId())) {
+                    epic.getSubtasks().replace(newSubtask.getTaskId(), newSubtask);
+                } else {
+                    epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
+                }
                 // обновить статус эпика
                 calcStatusAdd(epic, newSubtask.getStatus());
                 return newSubtask.getTaskId();
@@ -135,22 +158,22 @@ public class InMemoryTaskManager implements TaskManager, Cloneable {
     @Override
     public void updateTask(Task task) {
         if (task != null) {
-            deleteTask(task.getTaskId());
+            // в текущей реализации это замена существующего элемента
             addTask(task);
         }
     }
+
     @Override
     public void updateEpic(Epic epic) {
         if (epic != null) {
-            deleteEpic(epic.getTaskId());
             addEpic(epic);
         }
     }
+
     @Override
     public void updateSubtask(Subtask subtask) {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
         if (epic != null) {
-            deleteSubtask(subtask.getTaskId());
             addSubtask(subtask);
             // пересчёты статусов есть внутри функций
         }
@@ -158,19 +181,31 @@ public class InMemoryTaskManager implements TaskManager, Cloneable {
 
     // f. Удаление по идентификатору.
     @Override
-    public void deleteTask(Integer taskId) {
-        taskList.remove(taskId);
+    public void deleteTask(int id) {
+        taskList.remove(id);
+        historyManager.remove(id);
     }
+
     @Override
-    public void deleteEpic(Integer taskId) {
-        epicList.remove(taskId);
+    public void deleteEpic(int id) {
+        Epic epic = epicList.get(id);
+        if (null != epic) {
+            // из истории надо удалить не только эпик, но и его подзадачи
+            for (Subtask subtask : epic.getSubtasks().values()) {
+                historyManager.remove(subtask.getTaskId());
+            }
+            historyManager.remove(id);
+            epicList.remove(id);
+        }
     }
+
     @Override
-    public void deleteSubtask(Integer subtaskId) {
+    public void deleteSubtask(int id) {
         for (Epic epic : epicList.values()) {
-            if (null != epic.getSubtasks().get(subtaskId)) {
-                Status status = epic.getSubtasks().get(subtaskId).getStatus();
-                epic.getSubtasks().remove(subtaskId);
+            if (null != epic.getSubtasks().get(id)) {
+                Status status = epic.getSubtasks().get(id).getStatus();
+                epic.getSubtasks().remove(id);
+                historyManager.remove(id);
                 calcStatusRemove(epic, status);
                 // выход - удаляем лишь первое вхождение
                 return;
@@ -181,7 +216,7 @@ public class InMemoryTaskManager implements TaskManager, Cloneable {
     // Истории последних операций получения задач/эпиков/подзадач
     @Override
     public List<Task> getHistory() {
-        // заменил .copyOf() на Collections.unmodifiableList поскольку метод get и так делает копию
+        // метод get делает копии элеметов, поэтому достаточно сделать Collections.unmodifiableList
         return Collections.unmodifiableList(historyManager.getHistory());
     }
 

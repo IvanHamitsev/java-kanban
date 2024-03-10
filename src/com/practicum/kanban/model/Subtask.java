@@ -7,6 +7,7 @@ public class Subtask extends Task {
     public Subtask() {
         super();
     }
+
     public Subtask(String name) {
         super(name);
     }

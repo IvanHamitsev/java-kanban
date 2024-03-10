@@ -1,8 +1,10 @@
 package com.practicum.kanban.model;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
-public class RepeatRingBuffer<T extends Task> implements RingBuffer<T> {
+public class RepeatRingBuffer<T extends Task> implements HistoryStorage<T> {
     private T[] source;
     // счётчик занятых элементов от 0 до size
     private int counter;
@@ -16,10 +18,12 @@ public class RepeatRingBuffer<T extends Task> implements RingBuffer<T> {
         counter = 0;
         writePointer = 0;
     }
+
     public void clear() {
         counter = 0;
         writePointer = 0;
     }
+
     // нужно, чтобы знать, как вычитывать буфер
     public boolean ifFull() {
         Comparator<String> comp = String.CASE_INSENSITIVE_ORDER;
@@ -40,10 +44,29 @@ public class RepeatRingBuffer<T extends Task> implements RingBuffer<T> {
             counter++;
         }
     }
+
+    @Override
+    public void remove(int id) {
+        // На этапе истории ограниченного размера не требовалось
+    }
+
+    @Override
+    public List<T> getHistory() {
+        List<T> resultList = new ArrayList<>();
+        int i = 1;
+        T task = get(i);
+        while (task != null) {
+            resultList.add(task);
+            i++;
+            task = get(i);
+        }
+        return resultList;
+    }
+
     // получить элемент "возрастом" age. age = 1 самый новый, age = size самый старый, больше нельзя
     // метод будет удобен, чтобы в цикле получать элементы
     public T get(int age) {
-        if ((age > source.length)||(age < 1)) {
+        if ((age > source.length) || (age < 1)) {
             return null;
         }
         int point = writePointer - age;

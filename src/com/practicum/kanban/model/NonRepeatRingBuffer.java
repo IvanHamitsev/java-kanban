@@ -1,8 +1,10 @@
 package com.practicum.kanban.model;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
-public class NonRepeatRingBuffer<T extends Task> implements RingBuffer<T> {
+public class NonRepeatRingBuffer<T extends Task> implements HistoryStorage<T> {
     private LinkedList<T> source = new LinkedList<>();
     // счётчик занятых элементов от 0 до size
     private int counter;
@@ -17,11 +19,13 @@ public class NonRepeatRingBuffer<T extends Task> implements RingBuffer<T> {
         this.size = size;
     }
 
+    @Override
     public void clear() {
         counter = 0;
         writePointer = 0;
         source.clear();
     }
+
     public boolean ifFull() {
         if (counter < size) {
             return false;
@@ -39,7 +43,7 @@ public class NonRepeatRingBuffer<T extends Task> implements RingBuffer<T> {
 
             if (writePointer > source.size()) {
                 // на границе List-а получается особый случай, нет сдвига элементов
-                source.add(writePointer-1, newElement);
+                source.add(writePointer - 1, newElement);
             } else {
                 source.add(writePointer, newElement);
                 writePointer++;
@@ -64,6 +68,11 @@ public class NonRepeatRingBuffer<T extends Task> implements RingBuffer<T> {
         }
     }
 
+    @Override
+    public void remove(int id) {
+        // На этапе истории ограниченного размера не требовалось
+    }
+
     // получить элемент "возрастом" age. age = 1 самый новый, age = size самый старый, больше нельзя
     // метод будет удобен, чтобы в цикле получать элементы
     public T get(int age) {
@@ -86,5 +95,18 @@ public class NonRepeatRingBuffer<T extends Task> implements RingBuffer<T> {
             }
             return (T)source.get(point).copy();
         }
+    }
+
+    @Override
+    public List<T> getHistory() {
+        List<T> resultList = new ArrayList<>();
+        int i = 1;
+        T task = get(i);
+        while (task != null) {
+            resultList.add(task);
+            i++;
+            task = get(i);
+        }
+        return resultList;
     }
 }
