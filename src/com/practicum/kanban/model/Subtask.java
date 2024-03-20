@@ -24,9 +24,15 @@ public class Subtask extends Task {
         super(name, description, status);
     }
 
+    private Subtask(int id, String name, String description, Status status, int parentId) {
+        this(name, description, status);
+        this.setTaskId(id);
+        this.setParentId(parentId);
+    }
+
     public Subtask(Subtask in) {
         super(in);
-        this.parentId = in.getParentId();
+        this.setParentId(in.getParentId());
     }
 
     public Integer getParentId() {
@@ -44,11 +50,15 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
-        return "Subtask{" +
-                "id=" + id +
-                ", parentId=" + parentId +
-                " '" + name + '\'' +
-                ", " + status +
-                " } ";
+        return id + "," +
+                "SUBTASK," +
+                name + "," +
+                status + "," +
+                description + "," +
+                parentId;
+    }
+
+    public static Subtask fromString(String[] values) {
+        return new Subtask(Integer.parseInt(values[0]), values[2], values[4], Status.fromString(values[3]), Integer.parseInt(values[5]));
     }
 }

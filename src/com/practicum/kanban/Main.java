@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Поехали!");
 
-        TaskManager taskManager = Managers.getDefault();
+        TaskManager taskManager = Managers.getFileTaskManager("kanban.csv");
 
         Task task1 = new Task("Задача1", "Описание1");
         Task task2 = new Task("Задача2", "Описание2", Status.DONE);
@@ -65,15 +65,6 @@ public class Main {
 
         // удалить задачу
         taskManager.deleteTask(task1Id);
-        // удалить целиком все задачи
-        taskManager.deleteAllTasks();
-
-        // удалить подзадачи, влияя на статус эпика
-        taskManager.deleteSubtask(sub1Id);
-        taskManager.deleteSubtask(sub3Id);
-
-        System.out.println();
-        System.out.println(taskManager);
 
         // поменяем статус подзадачи
         sub5.setStatus(Status.IN_PROGRESS);
@@ -83,20 +74,5 @@ public class Main {
 
         System.out.println();
         System.out.println(taskManager.getEpic(epic2Id));
-
-        // удалить подзадачи эпика
-        taskManager.deleteSubtasks(epic2Id);
-
-        // удалить последнюю подзадачу эпика
-        taskManager.deleteSubtask(sub2Id);
-
-        System.out.println();
-        System.out.println(taskManager);
-
-        System.out.println();
-        System.out.println("История после удалений");
-        for (Task task : taskManager.getHistory()) {
-            System.out.println(task);
-        }
     }
 }
