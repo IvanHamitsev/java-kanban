@@ -100,7 +100,7 @@ public class Task {
         }
         Task testingObject = (Task) obj;
         // Считаем, что идентичность идентификаторов означает идентичность задач
-        if (this.id == testingObject.id) {
+        if (this.getTaskId() == testingObject.getTaskId()) {
             return true;
         }
         return false;
