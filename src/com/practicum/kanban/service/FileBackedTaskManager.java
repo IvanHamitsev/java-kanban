@@ -16,6 +16,10 @@ import java.nio.file.Paths;
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private Path kanbanFilePath;
 
+    public static final int COUNT_LOADABLE_FIELDS_IN_TASK = 5;
+    public static final int COUNT_LOADABLE_FIELDS_IN_EPIC = 5;
+    public static final int COUNT_LOADABLE_FIELDS_IN_SUBTASK = 6;
+
     // конструктор без параметров создаёт временный файл
     public FileBackedTaskManager() {
         super();
@@ -23,7 +27,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             kanbanFilePath = Files.createTempFile("kanbanTemp", ".csv");
             load();
         } catch (IOException e) {
-            throw new ManagerLoadException();
+            throw new ManagerLoadException("При создании временного файла произошла ошибка " + e.getMessage());
         }
     }
 
@@ -38,7 +42,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         try {
             Files.deleteIfExists(kanbanFilePath);
         } catch (IOException e) {
-            throw new ManagerSaveException();
+            throw new ManagerSaveException("Не удалось удалить файл " + kanbanFilePath);
         }
     }
 
@@ -68,29 +72,37 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (NoSuchFileException e) {
             // нет файла - нет проблем, едем дальше
         } catch (IOException e) {
-            throw new ManagerLoadException();
+            throw new ManagerLoadException("Ошибка при загрузке данных из файла " + kanbanFilePath);
         }
     }
 
     private void parseElement(String description) {
         String[] fields = description.split(",");
-        if ((fields.length >= 5) && (fields[1].equals("TASK"))) {
-            addTask(Task.fromStrings(fields));
-        } else if ((fields.length >= 5) && (fields[1].equals("EPIC"))) {
-            addEpic(Epic.fromStrings(fields));
-        } else if ((fields.length >= 6) && (fields[1].equals("SUBTASK"))) {
-            addSubtask(Subtask.fromString(fields));
+
+        if ((fields.length >= COUNT_LOADABLE_FIELDS_IN_TASK) && (fields[1].equals("TASK"))) {
+            // нужно взять родительскую реализацию метода, без записи в файл. Нельзя писать на этапе загрузки
+            super.addTask(Task.fromStrings(fields));
+        } else if ((fields.length >= COUNT_LOADABLE_FIELDS_IN_EPIC) && (fields[1].equals("EPIC"))) {
+            super.addEpic(Epic.fromStrings(fields));
+        } else if ((fields.length >= COUNT_LOADABLE_FIELDS_IN_SUBTASK) && (fields[1].equals("SUBTASK"))) {
+            super.addSubtask(Subtask.fromString(fields));
+        } else {
+            // не подходит под формат
+            throw new ManagerLoadException("Неверный формат строки с элементом коллекции");
         }
     }
 
     private void parseHistory(String description) {
         String[] fields = description.split(",");
-        if ((fields.length >= 5) && (fields[1].equals("TASK"))) {
+        if ((fields.length >= COUNT_LOADABLE_FIELDS_IN_TASK) && (fields[1].equals("TASK"))) {
             historyManager.add(Task.fromStrings(fields));
-        } else if ((fields.length >= 5) && (fields[1].equals("EPIC"))) {
+        } else if ((fields.length >= COUNT_LOADABLE_FIELDS_IN_EPIC) && (fields[1].equals("EPIC"))) {
             historyManager.add(Epic.fromStrings(fields));
-        } else if ((fields.length >= 6) && (fields[1].equals("SUBTASK"))) {
+        } else if ((fields.length >= COUNT_LOADABLE_FIELDS_IN_SUBTASK) && (fields[1].equals("SUBTASK"))) {
             historyManager.add(Subtask.fromStrings(fields));
+        } else {
+            // не подходит под формат
+            throw new ManagerLoadException("Неверный формат строки с элементом истории");
         }
     }
 
@@ -210,7 +222,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 writer.write(task.toString() + "\n");
             }
         } catch (IOException e) {
-            throw new ManagerSaveException();
+            throw new ManagerSaveException("Ошибка при сохранении данных в файл " + kanbanFilePath);
         }
 
     }
