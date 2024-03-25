@@ -13,10 +13,14 @@ public class InMemoryTaskManager implements TaskManager {
     private HashMap<Integer, Task> taskList = new HashMap<>();
     private HashMap<Integer, Epic> epicList = new HashMap<>();
 
-    private HistoryManager historyManager;
+    protected HistoryManager historyManager;
 
     public InMemoryTaskManager() {
-        historyManager = Managers.getDefaultHistory();
+        historyManager = Managers.getDefaultHistoryManager();
+    }
+
+    public InMemoryTaskManager(HistoryManager manager) {
+        historyManager = manager;
     }
 
     // a. Получение списка всех задач.

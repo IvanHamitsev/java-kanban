@@ -8,10 +8,9 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     // хранилище
     private HistoryStorage<Task> historyStorage;
-    // получить последние 10 просмотренных задач
 
-    public InMemoryHistoryManager() {
-        historyStorage = Managers.getDefaultHistoryStorage();
+    public InMemoryHistoryManager(HistoryStorage historyStorage) {
+        this.historyStorage = historyStorage;
     }
 
     @Override

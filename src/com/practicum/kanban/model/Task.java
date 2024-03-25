@@ -7,7 +7,7 @@ public class Task {
     // Идентификатор задачи
     protected Integer id;
     // Статический номер экземпляра для генерации уникального id
-    private static int tasksCount = 0;
+    protected static int tasksCount = 0;
 
     public Task() {
         // автоинкрементное поле даст уникальность экземпляров
@@ -42,7 +42,12 @@ public class Task {
         this.name = in.getName();
         this.description = in.getDescription();
         this.status = in.getStatus();
-        this.id = in.getTaskId();
+        this.setTaskId(in.getTaskId());
+    }
+
+    private Task(int id, String name, String description, Status status) {
+        this(name, description, status);
+        this.setTaskId(id);
     }
 
     public String getName() {
@@ -73,8 +78,11 @@ public class Task {
         return id;
     }
 
-    public void setTaskId(int taskHashNumber) {
-        this.id = taskHashNumber;
+    public void setTaskId(int id) {
+        if (tasksCount < id) {
+            tasksCount = id;
+        }
+        this.id = id;
     }
 
     public Task copy() {
@@ -92,7 +100,7 @@ public class Task {
         }
         Task testingObject = (Task) obj;
         // Считаем, что идентичность идентификаторов означает идентичность задач
-        if (this.id == testingObject.id) {
+        if (this.getTaskId() == testingObject.getTaskId()) {
             return true;
         }
         return false;
@@ -100,9 +108,14 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "id=" + id +
-                " '" + name + '\'' +
-                " " + status + " }";
+        return id + "," +
+                "TASK," +
+                name + "," +
+                status + "," +
+                description + ",";
+    }
+
+    public static Task fromStrings(String[] values) {
+        return new Task(Integer.parseInt(values[0]), values[2], values[4], Status.fromString(values[3]));
     }
 }

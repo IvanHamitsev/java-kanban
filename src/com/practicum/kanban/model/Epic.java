@@ -34,6 +34,11 @@ public class Epic extends Task {
         }
     }
 
+    private Epic(int id, String name, String description, Status status) {
+        this(name, description, status);
+        this.setTaskId(id);
+    }
+
     public HashMap<Integer, Subtask> getSubtasks() {
         return subtasks;
     }
@@ -49,13 +54,14 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        String res = "Epic{" +
-                "id=" + id +
-                " '" + name + "' ";
-        for (Task task : subtasks.values()) {
-            res = res.concat(task.toString());
-        }
-        res = res.concat(" " + status + " }");
-        return res;
+        return id + "," +
+                "EPIC," +
+                name + "," +
+                status + "," +
+                description + ",";
+    }
+
+    public static Epic fromStrings(String[] values) {
+        return new Epic(Integer.parseInt(values[0]), values[2], values[4], Status.fromString(values[3]));
     }
 }
