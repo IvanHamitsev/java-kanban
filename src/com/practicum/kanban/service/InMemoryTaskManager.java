@@ -2,6 +2,9 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.*;
 
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -13,10 +16,16 @@ public class InMemoryTaskManager implements TaskManager {
     private HashMap<Integer, Task> taskList = new HashMap<>();
     private HashMap<Integer, Epic> epicList = new HashMap<>();
 
+    // Хэш-таблица для хранения информации занятого времени
+    private HashMap<Integer, Boolean> busyMap = new HashMap<>();
+    protected long START_TIME; // время (timestamp) старта планирования
+
     protected HistoryManager historyManager;
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistoryManager();
+        // это время может измениться в результате чтения истории
+        START_TIME = Timestamp.valueOf(LocalDateTime.now()).getTime();
     }
 
     public InMemoryTaskManager(HistoryManager manager) {
@@ -301,6 +310,13 @@ public class InMemoryTaskManager implements TaskManager {
             // нет подзадач - статус NEW
             epic.setStatus(Status.NEW);
         }
+    }
+
+    public boolean ifTimeIsBusy(LocalDateTime start, Duration duration) {
+        if ((start != null)&&(duration != null)) {
+            long sT = Timestamp.valueOf(start).getTime();
+        }
+        return true;
     }
 
     @Override

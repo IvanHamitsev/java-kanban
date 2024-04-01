@@ -1,9 +1,15 @@
 package com.practicum.kanban.model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 public class Task {
     protected String name;
     protected String description;
     protected Status status;
+    protected LocalDateTime startTime;
+    protected Duration duration;
     // Идентификатор задачи
     protected Integer id;
     // Статический номер экземпляра для генерации уникального id
@@ -68,6 +74,14 @@ public class Task {
 
     public Status getStatus() {
         return status;
+    }
+
+    public Optional<LocalDateTime> getEndTime() {
+        Optional<LocalDateTime> result = Optional.empty();
+        if ((startTime != null)&&(duration != null)) {
+            result = Optional.of(startTime.plus(duration));
+        }
+        return result;
     }
 
     public void setStatus(Status status) {

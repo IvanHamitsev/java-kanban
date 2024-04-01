@@ -1,9 +1,12 @@
 package com.practicum.kanban.model;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 
 public class Epic extends Task {
     private HashMap<Integer, Subtask> subtasks = new HashMap<>();
+
+    protected LocalDateTime endTime;
 
     public Epic() {
         super();
