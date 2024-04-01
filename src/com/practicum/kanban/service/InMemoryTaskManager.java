@@ -17,15 +17,13 @@ public class InMemoryTaskManager implements TaskManager {
     private HashMap<Integer, Epic> epicList = new HashMap<>();
 
     // Хэш-таблица для хранения информации занятого времени
-    private HashMap<Integer, Boolean> busyMap = new HashMap<>();
-    protected long START_TIME; // время (timestamp) старта планирования
+    private HashMap<Long, Boolean> busyMap = new HashMap<>();
+    protected static long STEP_TIME = 15 * 60 * 1000; // шаг времени (15 минут в миллисекундах) в табличке busyMap
 
     protected HistoryManager historyManager;
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistoryManager();
-        // это время может измениться в результате чтения истории
-        START_TIME = Timestamp.valueOf(LocalDateTime.now()).getTime();
     }
 
     public InMemoryTaskManager(HistoryManager manager) {
@@ -312,11 +310,50 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    public boolean ifTimeIsBusy(LocalDateTime start, Duration duration) {
-        if ((start != null)&&(duration != null)) {
-            long sT = Timestamp.valueOf(start).getTime();
+    public void reservTime(LocalDateTime start, Duration duration) throws IntersectionException {
+        long time = Timestamp.valueOf(start).getTime();
+        long limit = Timestamp.valueOf(start.plus(duration)).getTime();
+
+        while (time < limit) {
+            if (busyMap.containsKey(time)) {
+                if (busyMap.get(time)) {
+                    // пересечение с существующей задачей, дальнейшие действия невозможны
+                    throw new IntersectionException("Момент времени " + time + " занят");
+                } else {
+                    // элемент хоть и есть, но не занят
+                    busyMap.replace(time, true);
+                }
+            } else {
+                // элемента просто нет
+                busyMap.put(time, true);
+            }
+            time += STEP_TIME;
         }
-        return true;
+    }
+
+    public boolean ifTimeIsBusy(LocalDateTime start, Duration duration) {
+        long time = Timestamp.valueOf(start).getTime();
+        long limit = Timestamp.valueOf(start.plus(duration)).getTime();
+        while (time < limit) {
+            if (busyMap.containsKey(time) && busyMap.get(time)) {
+                return true;
+            }
+            time += STEP_TIME;
+        }
+        return false;
+    }
+
+    public void freeTime(LocalDateTime start, Duration duration) {
+        long time = Timestamp.valueOf(start).getTime();
+        long limit = Timestamp.valueOf(start.plus(duration)).getTime();
+        while (time < limit) {
+            if (busyMap.containsKey(time) && busyMap.get(time)) {
+                busyMap.remove(time);
+            } else {
+                throw new RuntimeException("Время " + time + " просто не может быть не занято");
+            }
+            time += STEP_TIME;
+        }
     }
 
     @Override
