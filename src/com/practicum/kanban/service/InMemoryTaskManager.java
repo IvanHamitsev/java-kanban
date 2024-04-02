@@ -149,17 +149,23 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtask != null) {
             Epic epic = (Epic) epicList.get(subtask.getParentId());
             if (epic != null) {
-                Subtask newSubtask = subtask.copy();
-                // клонирование не проставляет ссылки, проставим их
-                newSubtask.setParentId(epic.getTaskId());
-                if (epic.getSubtasks().containsKey(newSubtask.getTaskId())) {
-                    epic.getSubtasks().replace(newSubtask.getTaskId(), newSubtask);
-                } else {
-                    epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
+                // теперь добавление подзадачи может быть неудачным, если она пересекается во времени
+                if (subtask.getStartTime().isPresent() && ifTimeIsFree(subtask.getStartTime().get(), subtask.getDuration().get())) {
+                    Subtask newSubtask = subtask.copy();
+                    // клонирование не проставляет ссылки, проставим их
+                    newSubtask.setParentId(epic.getTaskId());
+                    if (epic.getSubtasks().containsKey(newSubtask.getTaskId())) {
+                        epic.getSubtasks().replace(newSubtask.getTaskId(), newSubtask);
+                    } else {
+                        epic.getSubtasks().put(newSubtask.getTaskId(), newSubtask);
+                    }
+                    // обновить статус эпика
+                    calcStatusAdd(epic, newSubtask.getStatus());
+                    // обновить время начала и окончания эпика
+                    reservTime(newSubtask.getStartTime().get(), newSubtask.getDuration().get());
+                    epic.
+                    return newSubtask.getTaskId();
                 }
-                // обновить статус эпика
-                calcStatusAdd(epic, newSubtask.getStatus());
-                return newSubtask.getTaskId();
             }
         }
         return -1;
@@ -331,16 +337,16 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    public boolean ifTimeIsBusy(LocalDateTime start, Duration duration) {
+    public boolean ifTimeIsFree(LocalDateTime start, Duration duration) {
         long time = Timestamp.valueOf(start).getTime();
         long limit = Timestamp.valueOf(start.plus(duration)).getTime();
         while (time < limit) {
             if (busyMap.containsKey(time) && busyMap.get(time)) {
-                return true;
+                return false;
             }
             time += STEP_TIME;
         }
-        return false;
+        return true;
     }
 
     public void freeTime(LocalDateTime start, Duration duration) {

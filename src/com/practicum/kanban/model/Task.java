@@ -76,12 +76,26 @@ public class Task {
         return status;
     }
 
+    public Optional<LocalDateTime> getStartTime() {
+        return Optional.ofNullable(startTime);
+    }
+
     public Optional<LocalDateTime> getEndTime() {
         Optional<LocalDateTime> result = Optional.empty();
-        if ((startTime != null)&&(duration != null)) {
+        if ((startTime != null) && (duration != null)) {
             result = Optional.of(startTime.plus(duration));
         }
         return result;
+    }
+
+    public Optional<Duration> getDuration() {
+        return Optional.ofNullable(duration);
+    }
+
+    // сеттеры времени начала задачи и окончания объеденины в один, поскольку по отдельности они бессмысленны
+    public void setTime(LocalDateTime start, Duration duration) {
+        this.startTime = start;
+        this.duration = duration;
     }
 
     public void setStatus(Status status) {

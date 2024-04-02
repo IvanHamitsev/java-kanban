@@ -1,7 +1,9 @@
 package com.practicum.kanban.model;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class Epic extends Task {
     private HashMap<Integer, Subtask> subtasks = new HashMap<>();
@@ -48,6 +50,55 @@ public class Epic extends Task {
 
     public void insertSubtask(Subtask subtask) {
         subtasks.put(subtask.getTaskId(), subtask);
+    }
+
+    @Override
+    public Optional<LocalDateTime> getEndTime() {
+        return Optional.ofNullable(endTime);
+    }
+
+
+    // расширяющее обновление времени Epic - простое сравнение со старыми значениями
+    public void expandingTimeUpdate(LocalDateTime start, LocalDateTime finish) {
+        if (start.isBefore(this.startTime)) {
+            this.startTime = start;
+        }
+
+        if(finish.isAfter(this.endTime)) {
+            this.endTime = finish;
+        }
+
+        this.duration = Duration.between(this.startTime, this.endTime);
+    }
+
+    // сужающее обновление времени Epic требует перебора всех подзадач
+    public void reduceTimeUpdate() {
+        // значения будут пересчитаны
+        this.startTime = null;
+        this.endTime = null;
+        this.duration = null;
+        // перебираем все подзадачи с помощью stream
+        this.subtasks.values().stream()
+                // взять первое notNull значение времени подзадачи как начальное
+                .peek((Subtask s) -> {
+                    if (s.getStartTime().isPresent() && this.startTime == null) {
+                        this.startTime = s.getStartTime().get();
+                        this.endTime = this.startTime.plus(s.getDuration().get());
+                    }
+                })
+                // проверить время старта/окончания подзадачи на предмент возможно актуального для Epic
+                .peek((Subtask s) -> {
+                    if (s.getStartTime().isPresent() && s.getStartTime().get().isBefore(this.startTime)) {
+                        this.startTime = s.getStartTime().get();
+                    }
+                    if (s.getEndTime().isPresent() && s.getEndTime().get().isAfter(this.endTime)) {
+                        this.endTime = s.getEndTime().get();
+                    }
+                });
+        // не забываем, что возможно не осталось задач, привязаных ко времени
+        if (this.startTime != null) {
+            this.duration = Duration.between(this.startTime, this.endTime);
+        }
     }
 
     @Override
