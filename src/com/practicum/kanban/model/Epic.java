@@ -57,6 +57,12 @@ public class Epic extends Task {
         return Optional.ofNullable(endTime);
     }
 
+    // применяется при удалении всех подзадач
+    public void clearTime() {
+        this.startTime = null;
+        this.duration = null;
+        this.endTime = null;
+    }
 
     // расширяющее обновление времени Epic - простое сравнение со старыми значениями
     public void expandingTimeUpdate(LocalDateTime start, LocalDateTime finish) {

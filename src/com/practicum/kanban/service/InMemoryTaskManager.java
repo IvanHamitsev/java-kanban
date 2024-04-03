@@ -57,11 +57,21 @@ public class InMemoryTaskManager implements TaskManager {
     // b. Удаление всех задач.
     @Override
     public void deleteAllTasks() {
+        taskList.values().stream()
+                .peek(t -> {
+                    deleteTask(t.getTaskId());
+                    historyManager.remove(t.getTaskId());
+                });
         taskList.clear();
     }
 
     @Override
     public void deleteAllEpics() {
+        epicList.values().stream()
+                .peek(e -> {
+                    deleteEpic(e.getTaskId());
+                    historyManager.remove(e.getTaskId());
+                });
         epicList.clear();
     }
 
@@ -69,10 +79,18 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteSubtasks(int id) {
         Epic epic = epicList.get(id);
         if (null != epic) {
+            epic.getSubtasks().values().stream()
+                    .peek(s -> {
+                        if (s.getStartTime().isPresent()) {
+                            freeTime(s.getStartTime().get(), s.getDuration().get());
+                        }
+                        historyManager.remove(s.getTaskId());
+                    });
             epic.getSubtasks().clear();
-            historyManager.remove(id);
             // обновить статус эпика
             epic.setStatus(Status.NEW);
+            // времени начала и окончания эпика теперь нет
+            epic.clearTime();
         }
     }
 
@@ -115,17 +133,24 @@ public class InMemoryTaskManager implements TaskManager {
     // d. Создание. Сам объект должен передаваться в качестве параметра.
     @Override
     public int addTask(Task task) {
-        // добавим копию полученной задачи, чтобы у пользователя не оставалось ссылки для
-        // несанкционированного доступа
+        // могли передать не задачу, проверить
         if ((task != null) && (task.getClass() == Task.class)) {
-            Task newTask = task.copy();
-            // в случае, если задача существует - обновим её
-            if (taskList.containsKey(newTask.getTaskId())) {
-                taskList.replace(newTask.getTaskId(), newTask);
-            } else {
-                taskList.put(newTask.getTaskId(), newTask);
+            //задача может быть не добавлена, если есть пересечение времени
+            if ((task.getStartTime().isEmpty()) ||
+                    ((task.getStartTime().isPresent()) &&
+                            (ifTimeIsFree(task.getStartTime().get(), task.getDuration().get())))) {
+                // добавим копию полученной задачи
+                Task newTask = task.copy();
+                // в случае, если задача существует - обновим её
+                if (taskList.containsKey(newTask.getTaskId())) {
+                    taskList.replace(newTask.getTaskId(), newTask);
+                } else {
+                    taskList.put(newTask.getTaskId(), newTask);
+                }
+                // зарезервировать время в общем учёте
+                reservTime(task.getStartTime().get(), task.getDuration().get());
+                return newTask.getTaskId();
             }
-            return newTask.getTaskId();
         }
         return -1;
     }
@@ -133,13 +158,19 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int addEpic(Epic epic) {
         if (epic != null) {
-            Epic newEpic = epic.copy();
-            if (epicList.containsKey(newEpic.getTaskId())) {
-                epicList.replace(newEpic.getTaskId(), newEpic);
-            } else {
-                epicList.put(newEpic.getTaskId(), newEpic);
+            if ((epic.getStartTime().isEmpty()) ||
+                    ((epic.getStartTime().isPresent()) &&
+                            (ifTimeIsFree(epic.getStartTime().get(), epic.getDuration().get())))) {
+                Epic newEpic = epic.copy();
+                if (epicList.containsKey(newEpic.getTaskId())) {
+                    epicList.replace(newEpic.getTaskId(), newEpic);
+                } else {
+                    epicList.put(newEpic.getTaskId(), newEpic);
+                }
+                // зарезервировать время в общем учёте
+                reservTime(epic.getStartTime().get(), epic.getDuration().get());
+                return newEpic.getTaskId();
             }
-            return newEpic.getTaskId();
         }
         return -1;
     }
@@ -150,7 +181,9 @@ public class InMemoryTaskManager implements TaskManager {
             Epic epic = (Epic) epicList.get(subtask.getParentId());
             if (epic != null) {
                 // теперь добавление подзадачи может быть неудачным, если она пересекается во времени
-                if (subtask.getStartTime().isPresent() && ifTimeIsFree(subtask.getStartTime().get(), subtask.getDuration().get())) {
+                if ((subtask.getStartTime().isEmpty()) ||
+                        ((subtask.getStartTime().isPresent()) &&
+                                (ifTimeIsFree(subtask.getStartTime().get(), subtask.getDuration().get())))) {
                     Subtask newSubtask = subtask.copy();
                     // клонирование не проставляет ссылки, проставим их
                     newSubtask.setParentId(epic.getTaskId());
@@ -161,9 +194,10 @@ public class InMemoryTaskManager implements TaskManager {
                     }
                     // обновить статус эпика
                     calcStatusAdd(epic, newSubtask.getStatus());
-                    // обновить время начала и окончания эпика
+                    // зарезервировать время в общем учёте
                     reservTime(newSubtask.getStartTime().get(), newSubtask.getDuration().get());
-                    epic.
+                    // обновить время начала и окончания эпика
+                    epic.expandingTimeUpdate(newSubtask.getStartTime().get(), newSubtask.getEndTime().get());
                     return newSubtask.getTaskId();
                 }
             }
@@ -199,6 +233,10 @@ public class InMemoryTaskManager implements TaskManager {
     // f. Удаление по идентификатору.
     @Override
     public void deleteTask(int id) {
+        Task task = getTask(id);
+        if ((task != null) && (task.getStartTime().isPresent())) {
+            freeTime(task.getStartTime().get(), task.getDuration().get());
+        }
         taskList.remove(id);
         historyManager.remove(id);
     }
@@ -207,10 +245,13 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteEpic(int id) {
         Epic epic = epicList.get(id);
         if (null != epic) {
-            // из истории надо удалить не только эпик, но и его подзадачи
-            for (Subtask subtask : epic.getSubtasks().values()) {
-                historyManager.remove(subtask.getTaskId());
-            }
+            epic.getSubtasks().values().stream()
+                    .peek(s -> {
+                        if (s.getStartTime().isPresent()) {
+                            freeTime(s.getStartTime().get(), s.getDuration().get());
+                        }
+                        historyManager.remove(s.getTaskId());
+                    });
             historyManager.remove(id);
             epicList.remove(id);
         }
@@ -218,16 +259,20 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteSubtask(int id) {
-        for (Epic epic : epicList.values()) {
-            if (null != epic.getSubtasks().get(id)) {
-                Status status = epic.getSubtasks().get(id).getStatus();
-                epic.getSubtasks().remove(id);
-                historyManager.remove(id);
-                calcStatusRemove(epic, status);
-                // выход - удаляем лишь первое вхождение
-                return;
-            }
-        }
+        epicList.values().stream()
+                .filter(epic -> null != epic.getSubtasks().get(id))
+                .peek(epic -> {
+                    Subtask subtask = epic.getSubtasks().get(id);
+                    Status status = subtask.getStatus();
+                    if (subtask.getStartTime().isPresent()) {
+                        freeTime(subtask.getStartTime().get(), subtask.getDuration().get());
+                    }
+                    epic.getSubtasks().remove(id);
+                    historyManager.remove(id);
+                    calcStatusRemove(epic, status);
+                    // и пересчитать время самого эпика
+                    epic.reduceTimeUpdate();
+                });
     }
 
     // Истории последних операций получения задач/эпиков/подзадач
@@ -316,7 +361,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    public void reservTime(LocalDateTime start, Duration duration) throws IntersectionException {
+    public void reservTime(LocalDateTime start, Duration duration) {
         long time = Timestamp.valueOf(start).getTime();
         long limit = Timestamp.valueOf(start.plus(duration)).getTime();
 
@@ -324,6 +369,7 @@ public class InMemoryTaskManager implements TaskManager {
             if (busyMap.containsKey(time)) {
                 if (busyMap.get(time)) {
                     // пересечение с существующей задачей, дальнейшие действия невозможны
+                    // это невозможное исключение, функцию вызывают после проверки
                     throw new IntersectionException("Момент времени " + time + " занят");
                 } else {
                     // элемент хоть и есть, но не занят
