@@ -1,6 +1,8 @@
 package com.practicum.kanban.model;
 
+import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -54,6 +56,13 @@ public class Task {
     private Task(int id, String name, String description, Status status) {
         this(name, description, status);
         this.setTaskId(id);
+    }
+
+    private Task(int id, String name, String description, Status status, long startTime, long duration) {
+        this(name, description, status);
+        this.setTaskId(id);
+        this.startTime = LocalDateTime.from(Instant.ofEpochMilli(startTime));
+        this.duration = Duration.ofMinutes(duration);
     }
 
     public String getName() {
@@ -136,14 +145,26 @@ public class Task {
 
     @Override
     public String toString() {
+        long startTime = 0;
+        long duration = 0;
+        if (this.startTime != null) {
+            startTime = Timestamp.valueOf(this.startTime).getTime();
+            duration = this.duration.toMinutes();
+        }
         return id + "," +
                 "TASK," +
                 name + "," +
                 status + "," +
+                startTime  + "," +
+                duration  + "," +
                 description + ",";
     }
 
     public static Task fromStrings(String[] values) {
-        return new Task(Integer.parseInt(values[0]), values[2], values[4], Status.fromString(values[3]));
+        if (Long.parseLong(values[4]) > 0) {
+            return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Long.parseLong(values[4]), Long.parseLong(values[5]));
+        } else {
+            return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]));
+        }
     }
 }

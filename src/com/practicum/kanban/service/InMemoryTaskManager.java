@@ -5,16 +5,19 @@ import com.practicum.kanban.model.*;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
     // Класс хранит только Task и Epic
     // Подзадачи каждый Epic хранит самостоятельно
     private HashMap<Integer, Task> taskList = new HashMap<>();
     private HashMap<Integer, Epic> epicList = new HashMap<>();
+
+    // задачи в отсортированном виде. Работаем только с задачами с заполненным временем
+    private TreeSet<Task> sortedTasksSet = new TreeSet<>((a, b) -> {
+        return (int) (Timestamp.valueOf(a.getStartTime().get()).getTime() -
+                Timestamp.valueOf(b.getStartTime().get()).getTime());
+    });
 
     // Хэш-таблица для хранения информации занятого времени
     private HashMap<Long, Boolean> busyMap = new HashMap<>();
@@ -30,9 +33,13 @@ public class InMemoryTaskManager implements TaskManager {
         historyManager = manager;
     }
 
+    public List<Task> getPrioritizedTasks() {
+        return sortedTasksSet.stream().toList();
+    }
+
     // a. Получение списка всех задач.
     public Map<Integer, Task> getTaskList() {
-        // не хочу отдавать сам список, отдадим его копию, чтобы не вмешались в оригинал
+        // отдавать копию
         Map<Integer, Task> res = (Map) taskList.clone();
         return res;
     }
@@ -61,6 +68,7 @@ public class InMemoryTaskManager implements TaskManager {
                 .peek(t -> {
                     deleteTask(t.getTaskId());
                     historyManager.remove(t.getTaskId());
+                    sortedTasksSet.remove(t);
                 });
         taskList.clear();
     }
@@ -71,6 +79,7 @@ public class InMemoryTaskManager implements TaskManager {
                 .peek(e -> {
                     deleteEpic(e.getTaskId());
                     historyManager.remove(e.getTaskId());
+                    sortedTasksSet.remove(e);
                 });
         epicList.clear();
     }
@@ -85,6 +94,7 @@ public class InMemoryTaskManager implements TaskManager {
                             freeTime(s.getStartTime().get(), s.getDuration().get());
                         }
                         historyManager.remove(s.getTaskId());
+                        sortedTasksSet.remove(s);
                     });
             epic.getSubtasks().clear();
             // обновить статус эпика
@@ -147,8 +157,13 @@ public class InMemoryTaskManager implements TaskManager {
                 } else {
                     taskList.put(newTask.getTaskId(), newTask);
                 }
-                // зарезервировать время в общем учёте
-                reservTime(task.getStartTime().get(), task.getDuration().get());
+                // для задач, содержащих время
+                if (task.getStartTime().isPresent()) {
+                    // зарезервировать время в общем учёте
+                    reservTime(task.getStartTime().get(), task.getDuration().get());
+                    // добавить задачу в отсортированное хранилище
+                    sortedTasksSet.add(task.copy());
+                }
                 return newTask.getTaskId();
             }
         }
@@ -167,8 +182,12 @@ public class InMemoryTaskManager implements TaskManager {
                 } else {
                     epicList.put(newEpic.getTaskId(), newEpic);
                 }
-                // зарезервировать время в общем учёте
-                reservTime(epic.getStartTime().get(), epic.getDuration().get());
+                if (epic.getStartTime().isPresent()) {
+                    // зарезервировать время в общем учёте
+                    reservTime(epic.getStartTime().get(), epic.getDuration().get());
+                    sortedTasksSet.add(epic.copy());
+                }
+
                 return newEpic.getTaskId();
             }
         }
@@ -194,10 +213,13 @@ public class InMemoryTaskManager implements TaskManager {
                     }
                     // обновить статус эпика
                     calcStatusAdd(epic, newSubtask.getStatus());
-                    // зарезервировать время в общем учёте
-                    reservTime(newSubtask.getStartTime().get(), newSubtask.getDuration().get());
-                    // обновить время начала и окончания эпика
-                    epic.expandingTimeUpdate(newSubtask.getStartTime().get(), newSubtask.getEndTime().get());
+                    if (subtask.getStartTime().isPresent()) {
+                        // зарезервировать время в общем учёте
+                        reservTime(newSubtask.getStartTime().get(), newSubtask.getDuration().get());
+                        // обновить время начала и окончания эпика
+                        epic.expandingTimeUpdate(newSubtask.getStartTime().get(), newSubtask.getEndTime().get());
+                        sortedTasksSet.add(subtask.copy());
+                    }
                     return newSubtask.getTaskId();
                 }
             }
@@ -239,6 +261,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         taskList.remove(id);
         historyManager.remove(id);
+        sortedTasksSet.remove(task);
     }
 
     @Override
@@ -254,6 +277,7 @@ public class InMemoryTaskManager implements TaskManager {
                     });
             historyManager.remove(id);
             epicList.remove(id);
+            sortedTasksSet.remove(epic);
         }
     }
 
@@ -266,12 +290,13 @@ public class InMemoryTaskManager implements TaskManager {
                     Status status = subtask.getStatus();
                     if (subtask.getStartTime().isPresent()) {
                         freeTime(subtask.getStartTime().get(), subtask.getDuration().get());
+                        sortedTasksSet.remove(subtask);
+                        // и пересчитать время самого эпика
+                        epic.reduceTimeUpdate();
                     }
                     epic.getSubtasks().remove(id);
                     historyManager.remove(id);
                     calcStatusRemove(epic, status);
-                    // и пересчитать время самого эпика
-                    epic.reduceTimeUpdate();
                 });
     }
 

@@ -16,9 +16,9 @@ import java.nio.file.Paths;
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private Path kanbanFilePath;
 
-    public static final int COUNT_LOADABLE_FIELDS_IN_TASK = 5;
-    public static final int COUNT_LOADABLE_FIELDS_IN_EPIC = 5;
-    public static final int COUNT_LOADABLE_FIELDS_IN_SUBTASK = 6;
+    public static final int COUNT_LOADABLE_FIELDS_IN_TASK = 7;
+    public static final int COUNT_LOADABLE_FIELDS_IN_EPIC = 7;
+    public static final int COUNT_LOADABLE_FIELDS_IN_SUBTASK = 8;
 
     // конструктор без параметров создаёт временный файл
     public FileBackedTaskManager() {
@@ -205,7 +205,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private void save() {
         try (BufferedWriter writer = Files.newBufferedWriter(kanbanFilePath)) {
             // записать заголовок
-            writer.write("id,type,name,status,description,epic\n");
+            writer.write("id,type,name,status, start time, duration, description,epic\n");
             // сохранить все текущие задачи/эпики/подзадачи
             for (var task : getTaskList().values()) {
                 writer.write(task.toString() + "\n");
