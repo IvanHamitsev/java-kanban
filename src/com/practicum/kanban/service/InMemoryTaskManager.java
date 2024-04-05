@@ -5,6 +5,7 @@ import com.practicum.kanban.model.*;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -23,6 +24,7 @@ public class InMemoryTaskManager implements TaskManager {
     private HashMap<Long, Boolean> busyMap = new HashMap<>();
     protected static long STEP_TIME = 15 * 60 * 1000; // шаг времени (15 минут в миллисекундах) в табличке busyMap
 
+    InaccurateTime inaccurateTime = new InaccurateTime(Duration.ofMinutes(15), ZoneId.systemDefault());
     protected HistoryManager historyManager;
 
     public InMemoryTaskManager() {
@@ -33,6 +35,23 @@ public class InMemoryTaskManager implements TaskManager {
         historyManager = manager;
     }
 
+    public boolean toSortedTaskSet(Task task) {
+        if (task.getStartTime().isPresent()) {
+            sortedTasksSet.add(task);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean removeFromSortedTaskSet(Task task) {
+        if (task.getStartTime().isPresent() && sortedTasksSet.contains(task)) {
+            sortedTasksSet.remove(task);
+            return true;
+        } else {
+            return false;
+        }
+    }
     public List<Task> getPrioritizedTasks() {
         return sortedTasksSet.stream().toList();
     }
@@ -68,7 +87,7 @@ public class InMemoryTaskManager implements TaskManager {
                 .peek(t -> {
                     deleteTask(t.getTaskId());
                     historyManager.remove(t.getTaskId());
-                    sortedTasksSet.remove(t);
+                    removeFromSortedTaskSet(t);
                 });
         taskList.clear();
     }
@@ -79,7 +98,7 @@ public class InMemoryTaskManager implements TaskManager {
                 .peek(e -> {
                     deleteEpic(e.getTaskId());
                     historyManager.remove(e.getTaskId());
-                    sortedTasksSet.remove(e);
+                    removeFromSortedTaskSet(e);
                 });
         epicList.clear();
     }
@@ -94,7 +113,7 @@ public class InMemoryTaskManager implements TaskManager {
                             freeTime(s.getStartTime().get(), s.getDuration().get());
                         }
                         historyManager.remove(s.getTaskId());
-                        sortedTasksSet.remove(s);
+                        removeFromSortedTaskSet(s);
                     });
             epic.getSubtasks().clear();
             // обновить статус эпика
@@ -162,7 +181,7 @@ public class InMemoryTaskManager implements TaskManager {
                     // зарезервировать время в общем учёте
                     reservTime(task.getStartTime().get(), task.getDuration().get());
                     // добавить задачу в отсортированное хранилище
-                    sortedTasksSet.add(task.copy());
+                    toSortedTaskSet(task.copy());
                 }
                 return newTask.getTaskId();
             }
@@ -185,7 +204,7 @@ public class InMemoryTaskManager implements TaskManager {
                 if (epic.getStartTime().isPresent()) {
                     // зарезервировать время в общем учёте
                     reservTime(epic.getStartTime().get(), epic.getDuration().get());
-                    sortedTasksSet.add(epic.copy());
+                    toSortedTaskSet(epic.copy());
                 }
 
                 return newEpic.getTaskId();
@@ -218,7 +237,7 @@ public class InMemoryTaskManager implements TaskManager {
                         reservTime(newSubtask.getStartTime().get(), newSubtask.getDuration().get());
                         // обновить время начала и окончания эпика
                         epic.expandingTimeUpdate(newSubtask.getStartTime().get(), newSubtask.getEndTime().get());
-                        sortedTasksSet.add(subtask.copy());
+                        toSortedTaskSet(subtask.copy());
                     }
                     return newSubtask.getTaskId();
                 }
@@ -261,7 +280,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         taskList.remove(id);
         historyManager.remove(id);
-        sortedTasksSet.remove(task);
+        removeFromSortedTaskSet(task);
     }
 
     @Override
@@ -277,7 +296,7 @@ public class InMemoryTaskManager implements TaskManager {
                     });
             historyManager.remove(id);
             epicList.remove(id);
-            sortedTasksSet.remove(epic);
+            removeFromSortedTaskSet(epic);
         }
     }
 
@@ -290,7 +309,7 @@ public class InMemoryTaskManager implements TaskManager {
                     Status status = subtask.getStatus();
                     if (subtask.getStartTime().isPresent()) {
                         freeTime(subtask.getStartTime().get(), subtask.getDuration().get());
-                        sortedTasksSet.remove(subtask);
+                        removeFromSortedTaskSet(subtask);
                         // и пересчитать время самого эпика
                         epic.reduceTimeUpdate();
                     }

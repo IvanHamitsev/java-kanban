@@ -1,5 +1,5 @@
-id,type,name,status,description,epic
-1,TASK,Задача1,NEW,Описание1,
-110,TASK,Задача2,NEW,Описание2,
+id,type,name,status,start time,duration,description,epic
+1,TASK,Задача1,NEW,0,0,Описание1,
+110,TASK,Задача2,NEW,0,0,Описание2,
 history
-1,TASK,Задача1,NEW,Описание1,
+1,TASK,Задача1,NEW,0,0,Описание1,

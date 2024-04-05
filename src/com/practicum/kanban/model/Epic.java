@@ -46,10 +46,10 @@ public class Epic extends Task {
         this.setTaskId(id);
     }
 
-    private Epic(int id, String name, String description, Status status, long startTime, long duration) {
+    private Epic(int id, String name, String description, Status status, LocalDateTime startTime, long duration) {
         this(name, description, status);
         this.setTaskId(id);
-        this.startTime = LocalDateTime.from(Instant.ofEpochMilli(startTime));
+        this.startTime = startTime;
         this.duration = Duration.ofMinutes(duration);
         this.endTime = this.startTime.plus(this.duration);
     }
@@ -124,11 +124,14 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        long startTime = 0;
+        String startTime = "0";
         long duration = 0;
         if (this.startTime != null) {
-            startTime = Timestamp.valueOf(this.startTime).getTime();
+            startTime = this.startTime.toString();
             duration = this.duration.toMinutes();
+
+            //LocalDateTime ldt = LocalDateTime.parse(startTime);
+            //System.out.println(ldt);
         }
         return id + "," +
                 "EPIC," +
@@ -140,10 +143,10 @@ public class Epic extends Task {
     }
 
     public static Epic fromStrings(String[] values) {
-        if (Long.parseLong(values[4]) > 0) {
-            return new Epic(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Long.parseLong(values[4]), Long.parseLong(values[5]));
-        } else {
+        if (values[4].equals("0")) {
             return new Epic(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]));
+        } else {
+            return new Epic(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
         }
     }
 }

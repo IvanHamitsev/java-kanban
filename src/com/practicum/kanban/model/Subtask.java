@@ -35,11 +35,11 @@ public class Subtask extends Task {
         this.setParentId(parentId);
     }
 
-    private Subtask(int id, String name, String description, Status status, int parentId, long startTime, long duration) {
+    private Subtask(int id, String name, String description, Status status, int parentId, LocalDateTime startTime, long duration) {
         this(name, description, status);
         this.setTaskId(id);
         this.setParentId(parentId);
-        this.startTime = LocalDateTime.from(Instant.ofEpochMilli(startTime));
+        this.startTime = startTime;
         this.duration = Duration.ofMinutes(duration);
     }
 
@@ -63,10 +63,10 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
-        long startTime = 0;
+        String startTime = "0";
         long duration = 0;
         if (this.startTime != null) {
-            startTime = Timestamp.valueOf(this.startTime).getTime();
+            startTime = this.startTime.toString();
             duration = this.duration.toMinutes();
         }
         return id + "," +
@@ -80,11 +80,11 @@ public class Subtask extends Task {
     }
 
     public static Subtask fromString(String[] values) {
-        if (Long.parseLong(values[4]) > 0) {
-            return new Subtask(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Integer.parseInt(values[7]),
-                    Long.parseLong(values[4]), Long.parseLong(values[5]));
-        } else {
+        if (values[4].equals("0")) {
             return new Subtask(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Integer.parseInt(values[7]));
+        } else {
+            return new Subtask(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Integer.parseInt(values[7]),
+                    LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
         }
     }
 }

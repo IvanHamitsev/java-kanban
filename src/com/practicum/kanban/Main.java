@@ -3,6 +3,10 @@ package com.practicum.kanban;
 import com.practicum.kanban.model.*;
 import com.practicum.kanban.service.*;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Main {
     public static void main(String[] args) {
         System.out.println("Поехали!");
@@ -10,7 +14,9 @@ public class Main {
         TaskManager taskManager = Managers.getFileTaskManager("kanban.csv");
 
         Task task1 = new Task("Задача1", "Описание1");
-        Task task2 = new Task("Задача2", "Описание2", Status.DONE);
+        // начнём через пару часиков, делов то на пять минут
+        Task task2 = new Task("Задача2", "Описание2", LocalDateTime.now().plus(Duration.ofHours(2)), Duration.ofMinutes(5));
+        Task task3 = new Task("Задача3", "Описание3", Status.DONE);
 
         Epic epic1 = new Epic("Эпик1", "ЭпикОписание1");
         Epic epic2 = new Epic("Эпик2", "ЭпикОписание2");
@@ -24,9 +30,10 @@ public class Main {
         Subtask sub6 = new Subtask("Подзад6", "ПодзадОписание6", Status.DONE);
 
         int task1Id = taskManager.addTask(task1);
+        int task2Id = taskManager.addTask(task2);
         int epic1Id = taskManager.addEpic(epic1);
         int epic2Id = taskManager.addEpic(epic2);
-        int task2Id = taskManager.addTask(task2);
+        int task3Id = taskManager.addTask(task3);
         int epic3Id = taskManager.addEpic(epic3);
 
         // надо подготовить subtask

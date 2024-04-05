@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 public class Task {
@@ -36,6 +37,13 @@ public class Task {
         this.description = description;
     }
 
+    public Task(String name, String description, LocalDateTime startTime, Duration duration) {
+        this(name);
+        this.description = description;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+
     public Task(String name, Status status) {
         this(name);
         this.status = status;
@@ -50,6 +58,8 @@ public class Task {
         this.name = in.getName();
         this.description = in.getDescription();
         this.status = in.getStatus();
+        this.startTime = in.startTime;
+        this.duration = in.duration;
         this.setTaskId(in.getTaskId());
     }
 
@@ -58,10 +68,11 @@ public class Task {
         this.setTaskId(id);
     }
 
-    private Task(int id, String name, String description, Status status, long startTime, long duration) {
+    private Task(int id, String name, String description, Status status, LocalDateTime startTime, long duration) {
         this(name, description, status);
         this.setTaskId(id);
-        this.startTime = LocalDateTime.from(Instant.ofEpochMilli(startTime));
+
+        this.startTime = startTime;
         this.duration = Duration.ofMinutes(duration);
     }
 
@@ -145,10 +156,14 @@ public class Task {
 
     @Override
     public String toString() {
-        long startTime = 0;
+        String startTime = "0";
         long duration = 0;
         if (this.startTime != null) {
-            startTime = Timestamp.valueOf(this.startTime).getTime();
+            //startTime = Timestamp.valueOf(this.startTime).getTime();
+            //startTime = Instant.from(this.startTime).getEpochSecond();
+            //startTime = Instant.from(this.startTime)
+            //duration = this.duration.toMinutes();
+            startTime = this.startTime.toString();
             duration = this.duration.toMinutes();
         }
         return id + "," +
@@ -161,10 +176,10 @@ public class Task {
     }
 
     public static Task fromStrings(String[] values) {
-        if (Long.parseLong(values[4]) > 0) {
-            return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Long.parseLong(values[4]), Long.parseLong(values[5]));
-        } else {
+        if (values[4].equals("0")) {
             return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]));
+        } else {
+            return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
         }
     }
 }

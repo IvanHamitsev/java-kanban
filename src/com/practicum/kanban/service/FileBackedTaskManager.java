@@ -205,7 +205,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private void save() {
         try (BufferedWriter writer = Files.newBufferedWriter(kanbanFilePath)) {
             // записать заголовок
-            writer.write("id,type,name,status, start time, duration, description,epic\n");
+            writer.write("id,type,name,status,start time,duration,description,epic\n");
             // сохранить все текущие задачи/эпики/подзадачи
             for (var task : getTaskList().values()) {
                 writer.write(task.toString() + "\n");
