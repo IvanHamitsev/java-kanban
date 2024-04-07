@@ -12,6 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private Path kanbanFilePath;
@@ -52,6 +55,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void load() {
         try (BufferedReader reader = Files.newBufferedReader(kanbanFilePath)) {
+            // из-за того, что файл разделён на блок элементов коллекции и блок элементов истории,
+            // это противоречит идее стрима - элемент нельзя обрабатывать без контекста положения в файле
             String line = reader.readLine();
             if ((line != null) && (line.startsWith("id"))) {
                 // пошёл блок описания элементов коллекции
@@ -76,6 +81,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
+    private void parseHeader(String line) {
+
+    }
     private void parseElement(String description) {
         String[] fields = description.split(",");
 
@@ -127,61 +135,114 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public Task getTask(int id) {
         Task res = super.getTask(id);
-        save();
+        // сохраняем только если действие произошло
+        if (res != null) {
+            save();
+        }
         return res;
     }
 
     @Override
     public Epic getEpic(int id) {
         Epic res = super.getEpic(id);
-        save();
+        if (res != null) {
+            save();
+        }
         return res;
     }
 
     @Override
     public Subtask getSubtask(int id) {
         Subtask res = super.getSubtask(id);
-        save();
+        if (res != null) {
+            save();
+        }
         return res;
     }
 
     @Override
     public int addTask(Task task) {
         int res = super.addTask(task);
-        save();
+        if (res > 0) {
+            save();
+        }
         return res;
     }
 
     @Override
     public int addEpic(Epic epic) {
         int res = super.addEpic(epic);
-        save();
+        if (res > 0) {
+            save();
+        }
         return res;
     }
 
     @Override
     public int addSubtask(Subtask subtask) {
         int res = super.addSubtask(subtask);
+        if (res > 0) {
+            save();
+        }
+        return res;
+    }
+
+    @Override
+    public int updateTask(Task task) {
+        int res = -1;
+        // помним, что прямой addTask не сработает - задача будет конфликтовать во времени
+        Task oldTask = taskList.get(task.getTaskId());
+        if (null != oldTask) {
+            LocalDateTime start = oldTask.getStartTime().orElse(null);
+            Duration duration = oldTask.getDuration().orElse(null);
+            // на время апдейта надо убрать из временной шкалы задачу
+            freeTime(start, duration);
+            res = super.updateTask(task);
+            if (0 > res) {
+                // после неуспешеного апдейта - вернуть старые параметры на временную шкалу
+                reservTime(start, duration);
+                return -1;
+            }
+        } else {
+            res = super.updateTask(task);
+        }
         save();
         return res;
     }
 
     @Override
-    public void updateTask(Task task) {
-        super.updateTask(task);
-        save();
+    public int updateEpic(Epic epic) {
+        // особенность Epic - он не занимает время. Время занимают его подзадачи.
+        int res = super.updateEpic(epic);
+        if (0 < res) {
+            save();
+        }
+        return res;
     }
 
     @Override
-    public void updateEpic(Epic epic) {
-        super.updateEpic(epic);
+    public int updateSubtask(Subtask subtask) {
+        int res = -1;
+        Optional<Epic> epic = epicList.values().stream()
+                .filter(e -> e.getSubtasks().get(subtask.getTaskId()) == null ? false : true)
+                .findFirst();
+        if (epic.isPresent()) {
+            Subtask oldSubtask = epic.get().getSubtasks().get(subtask.getTaskId());
+            LocalDateTime start = oldSubtask.getStartTime().orElse(null);
+            Duration duration = oldSubtask.getDuration().orElse(null);
+            // на время апдейта надо убрать из временной шкалы задачу
+            freeTime(start, duration);
+            res = super.updateSubtask(subtask);
+            if (0 > res) {
+                // после неуспешеного апдейта - вернуть старые параметры на временную шкалу
+                reservTime(start, duration);
+                return -1;
+            }
+        } else {
+            res = super.updateSubtask(subtask);
+        }
         save();
-    }
-
-    @Override
-    public void updateSubtask(Subtask subtask) {
-        super.updateSubtask(subtask);
-        save();
+        return res;
     }
 
     @Override
@@ -208,65 +269,22 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             writer.write("id,type,name,status,start time,duration,description,epic\n");
             // сохранить все текущие задачи/эпики/подзадачи
             for (var task : getTaskList().values()) {
-                writer.write(task.toString() + "\n");
+                writer.write(task.toFileString() + "\n");
             }
             for (var task : getEpicList().values()) {
-                writer.write(task.toString() + "\n");
+                writer.write(task.toFileString() + "\n");
                 for (var subTask : getSubtaskList(task.getTaskId()).values()) {
-                    writer.write(subTask.toString() + "\n");
+                    writer.write(subTask.toFileString() + "\n");
                 }
             }
             // записать заголовок истории
             writer.write("history\n");
             for (var task : historyManager.getHistory()) {
-                writer.write(task.toString() + "\n");
+                writer.write(task.toFileString() + "\n");
             }
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка при сохранении данных в файл " + kanbanFilePath);
         }
 
-    }
-
-    public static void main(String[] args) {
-        TaskManager taskManager = new FileBackedTaskManager("test.csv");
-
-        Task task1 = new Task("Задача1", "Описание1");
-        Task task2 = new Task("Задача2", "Описание2", Status.DONE);
-
-        Epic epic1 = new Epic("Эпик1", "ЭпикОписание1");
-        Epic epic2 = new Epic("Эпик2", "ЭпикОписание2");
-        Epic epic3 = new Epic("Эпик3", "ЭпикОписание3");
-
-        Subtask sub1 = new Subtask("Подзад1", "ПодзадОписание1");
-        Subtask sub2 = new Subtask("Подзад2", "ПодзадОписание2", Status.DONE);
-        Subtask sub3 = new Subtask("Подзад3", "ПодзадОписание3", Status.IN_PROGRESS);
-        Subtask sub4 = new Subtask("Подзад4", "ПодзадОписание4", Status.DONE);
-        Subtask sub5 = new Subtask("Подзад5", "ПодзадОписание5", Status.DONE);
-        Subtask sub6 = new Subtask("Подзад6", "ПодзадОписание6", Status.DONE);
-
-        int task1Id = taskManager.addTask(task1);
-        int epic1Id = taskManager.addEpic(epic1);
-        int epic2Id = taskManager.addEpic(epic2);
-        int task2Id = taskManager.addTask(task2);
-        int epic3Id = taskManager.addEpic(epic3);
-
-        sub1.setParentId(epic1Id);
-        sub2.setParentId(epic1Id);
-        sub3.setParentId(epic2Id);
-        sub4.setParentId(epic2Id);
-        sub5.setParentId(epic2Id);
-        sub6.setParentId(epic2Id);
-
-        int sub1Id = taskManager.addSubtask(sub1);
-        int sub2Id = taskManager.addSubtask(sub2);
-        int sub3Id = taskManager.addSubtask(sub3);
-        int sub4Id = taskManager.addSubtask(sub4);
-        int sub5Id = taskManager.addSubtask(sub5);
-        int sub6Id = taskManager.addSubtask(sub6);
-
-        TaskManager copyTaskManager = FileBackedTaskManager.loadFromFile("test.csv");
-
-        System.out.println(taskManager);
-        System.out.println(copyTaskManager);
     }
 }

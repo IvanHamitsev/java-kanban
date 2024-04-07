@@ -7,38 +7,52 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class InMemoryTaskManager implements TaskManager {
     // Класс хранит только Task и Epic
     // Подзадачи каждый Epic хранит самостоятельно
-    private HashMap<Integer, Task> taskList = new HashMap<>();
-    private HashMap<Integer, Epic> epicList = new HashMap<>();
+    protected HashMap<Integer, Task> taskList = new HashMap<>();
+    protected HashMap<Integer, Epic> epicList = new HashMap<>();
 
     // задачи в отсортированном виде. Работаем только с задачами с заполненным временем
-    private TreeSet<Task> sortedTasksSet = new TreeSet<>((a, b) -> {
+    private Comparator<Task> comparator = ((a, b) -> {
+        // вот беда: TreeSet вместо equals использует компаратор, придётся нагрузить его и функционалом равенства
+        //if (a.getTaskId() == b.getTaskId()) {
+        if (a.equals(b)) {
+            return 0;
+        }
+        // а вот идентичность времён двух разных задач - не повод не добавлять их. Костыли в студию.
         return (int) (Timestamp.valueOf(a.getStartTime().get()).getTime() -
-                Timestamp.valueOf(b.getStartTime().get()).getTime());
+                Timestamp.valueOf(b.getStartTime().get()).getTime() - 1);
     });
+    private TreeSet<Task> sortedTasksSet = new TreeSet<>(comparator);
 
     // Хэш-таблица для хранения информации занятого времени
     private HashMap<Long, Boolean> busyMap = new HashMap<>();
-    protected static long STEP_TIME = 15 * 60 * 1000; // шаг времени (15 минут в миллисекундах) в табличке busyMap
+    protected static long STEP_TIME; // шаг времени планирования (в минутах)
 
-    InaccurateTime inaccurateTime = new InaccurateTime(Duration.ofMinutes(15), ZoneId.systemDefault());
+    InaccurateTime inaccurateTime;
     protected HistoryManager historyManager;
 
-    public InMemoryTaskManager() {
-        historyManager = Managers.getDefaultHistoryManager();
+    public InMemoryTaskManager(HistoryManager manager, int timeStep) {
+        historyManager = manager;
+        STEP_TIME = timeStep;
+        inaccurateTime = new InaccurateTime(Duration.ofMinutes(STEP_TIME), ZoneId.systemDefault());
     }
 
     public InMemoryTaskManager(HistoryManager manager) {
-        historyManager = manager;
+        this(manager, 15);
+    }
+
+    public InMemoryTaskManager() {
+        this(Managers.getDefaultHistoryManager(), 15);
     }
 
     public boolean toSortedTaskSet(Task task) {
         if (task.getStartTime().isPresent()) {
-            sortedTasksSet.add(task);
-            return true;
+            boolean res = sortedTasksSet.add(task);
+            return res;
         } else {
             return false;
         }
@@ -52,6 +66,7 @@ public class InMemoryTaskManager implements TaskManager {
             return false;
         }
     }
+
     public List<Task> getPrioritizedTasks() {
         return sortedTasksSet.stream().toList();
     }
@@ -84,8 +99,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteAllTasks() {
         taskList.values().stream()
-                .peek(t -> {
-                    deleteTask(t.getTaskId());
+                .forEach(t -> {
                     historyManager.remove(t.getTaskId());
                     removeFromSortedTaskSet(t);
                 });
@@ -95,8 +109,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteAllEpics() {
         epicList.values().stream()
-                .peek(e -> {
-                    deleteEpic(e.getTaskId());
+                .forEach(e -> {
                     historyManager.remove(e.getTaskId());
                     removeFromSortedTaskSet(e);
                 });
@@ -108,7 +121,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epicList.get(id);
         if (null != epic) {
             epic.getSubtasks().values().stream()
-                    .peek(s -> {
+                    .forEach(s -> {
                         if (s.getStartTime().isPresent()) {
                             freeTime(s.getStartTime().get(), s.getDuration().get());
                         }
@@ -149,14 +162,17 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Subtask getSubtask(int id) {
-        for (Epic epic : epicList.values()) {
-            Subtask subtask = epic.getSubtasks().get(id);
-            if (null != subtask) {
-                historyManager.add(subtask.copy());
-                return subtask.copy();
-            }
+        Optional<Epic> optionalEpic = epicList.values().stream()
+                .filter(epic -> epic.getSubtasks().get(id) == null ? false : true)
+                .findAny();
+        if (optionalEpic.isPresent()) {
+            Subtask subtask = optionalEpic.get().getSubtasks().get(id);
+            // добавляем в историю копию объекта
+            historyManager.add(subtask.copy());
+            return subtask.copy();
+        } else {
+            return null;
         }
-        return null;
     }
 
     // d. Создание. Сам объект должен передаваться в качестве параметра.
@@ -181,7 +197,8 @@ public class InMemoryTaskManager implements TaskManager {
                     // зарезервировать время в общем учёте
                     reservTime(task.getStartTime().get(), task.getDuration().get());
                     // добавить задачу в отсортированное хранилище
-                    toSortedTaskSet(task.copy());
+                    // добавление оригинала, не коппии. Для того, чтобы при апдейте задачи изменялось и здесь
+                    toSortedTaskSet(task);
                 }
                 return newTask.getTaskId();
             }
@@ -202,9 +219,9 @@ public class InMemoryTaskManager implements TaskManager {
                     epicList.put(newEpic.getTaskId(), newEpic);
                 }
                 if (epic.getStartTime().isPresent()) {
-                    // зарезервировать время в общем учёте
-                    reservTime(epic.getStartTime().get(), epic.getDuration().get());
-                    toSortedTaskSet(epic.copy());
+                    // эпик не занимает время в общем учёте, его займут подзадачи
+                    //reservTime(epic.getStartTime().get(), epic.getDuration().get());
+                    toSortedTaskSet(epic);
                 }
 
                 return newEpic.getTaskId();
@@ -232,12 +249,14 @@ public class InMemoryTaskManager implements TaskManager {
                     }
                     // обновить статус эпика
                     calcStatusAdd(epic, newSubtask.getStatus());
-                    if (subtask.getStartTime().isPresent()) {
+                    if (newSubtask.getStartTime().isPresent()) {
                         // зарезервировать время в общем учёте
                         reservTime(newSubtask.getStartTime().get(), newSubtask.getDuration().get());
                         // обновить время начала и окончания эпика
                         epic.expandingTimeUpdate(newSubtask.getStartTime().get(), newSubtask.getEndTime().get());
-                        toSortedTaskSet(subtask.copy());
+                        toSortedTaskSet(newSubtask);
+                        // эпик получает время от подзадачи и требует добавления в sortedTaskSet
+                        toSortedTaskSet(epic);
                     }
                     return newSubtask.getTaskId();
                 }
@@ -248,27 +267,33 @@ public class InMemoryTaskManager implements TaskManager {
 
     //  e. Обновление. Новая версия объекта с верным идентификатором передаётся в виде параметра.
     @Override
-    public void updateTask(Task task) {
+    public int updateTask(Task task) {
         if (task != null) {
             // в текущей реализации это замена существующего элемента
-            addTask(task);
+            return addTask(task);
         }
+        return -1;
     }
 
     @Override
-    public void updateEpic(Epic epic) {
+    public int updateEpic(Epic epic) {
         if (epic != null) {
-            addEpic(epic);
+            return addEpic(epic);
         }
+        return -1;
     }
 
     @Override
-    public void updateSubtask(Subtask subtask) {
+    public int updateSubtask(Subtask subtask) {
         Epic epic = (Epic) epicList.get(subtask.getParentId());
         if (epic != null) {
-            addSubtask(subtask);
-            // пересчёты статусов есть внутри функций
+            // пересчёты статусов внутри функции предполагают новую подзадачу
+            int ret = addSubtask(subtask);
+            // пересчитать статус
+            calcStatus(epic);
+            return ret;
         }
+        return -1;
     }
 
     // f. Удаление по идентификатору.
@@ -288,7 +313,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epicList.get(id);
         if (null != epic) {
             epic.getSubtasks().values().stream()
-                    .peek(s -> {
+                    .forEach(s -> {
                         if (s.getStartTime().isPresent()) {
                             freeTime(s.getStartTime().get(), s.getDuration().get());
                         }
@@ -304,7 +329,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteSubtask(int id) {
         epicList.values().stream()
                 .filter(epic -> null != epic.getSubtasks().get(id))
-                .peek(epic -> {
+                .forEach(epic -> {
                     Subtask subtask = epic.getSubtasks().get(id);
                     Status status = subtask.getStatus();
                     if (subtask.getStartTime().isPresent()) {
@@ -354,10 +379,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         if (epic.getSubtasks().size() == 1) {
             // единственная оставшаяся подзадача эпика определит его статус
-            for (Subtask subtask : epic.getSubtasks().values()) {
-                epic.setStatus(subtask.getStatus());
-                return;
-            }
+            epic.setStatus(epic.getSubtasks().values().iterator().next().getStatus());
         } else {
             // при удалении подзадачи статус может измениться, только если он был IN_PROGRESS
             if (epic.getStatus() == Status.IN_PROGRESS) {
@@ -374,6 +396,7 @@ public class InMemoryTaskManager implements TaskManager {
             Status hiStatus = Status.DONE;
             Status lowStatus = Status.NEW;
             // за один проход по всем подзадачам эпика пересчитать статус
+            // (не ложится на идеологию стримов: обработка потока задач для формирования внешних переменных)
             for (Subtask subtask : epic.getSubtasks().values()) {
                 if (subtask.getStatus() == Status.NEW) {
                     hiStatus = Status.IN_PROGRESS;
@@ -406,62 +429,42 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public void reservTime(LocalDateTime start, Duration duration) {
-        long time = Timestamp.valueOf(start).getTime();
-        long limit = Timestamp.valueOf(start.plus(duration)).getTime();
+        if (null != start) {
+            // нужно округлить вверх, но так, чтобы для целого числа не получилось +1
+            long count = (long) Math.ceil(((double)duration.toMinutes() / STEP_TIME));
+            // поток времени от start
+            Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
+            // занять все моменты
+            timeStream.forEach(time -> busyMap.put(time, true));
 
-        while (time < limit) {
-            if (busyMap.containsKey(time)) {
-                if (busyMap.get(time)) {
-                    // пересечение с существующей задачей, дальнейшие действия невозможны
-                    // это невозможное исключение, функцию вызывают после проверки
-                    throw new IntersectionException("Момент времени " + time + " занят");
-                } else {
-                    // элемент хоть и есть, но не занят
-                    busyMap.replace(time, true);
-                }
-            } else {
-                // элемента просто нет
-                busyMap.put(time, true);
-            }
-            time += STEP_TIME;
         }
     }
 
     public boolean ifTimeIsFree(LocalDateTime start, Duration duration) {
-        long time = Timestamp.valueOf(start).getTime();
-        long limit = Timestamp.valueOf(start.plus(duration)).getTime();
-        while (time < limit) {
-            if (busyMap.containsKey(time) && busyMap.get(time)) {
-                return false;
-            }
-            time += STEP_TIME;
+        if (null != start) {
+            long count = (long) Math.ceil(((double) duration.toMinutes() / STEP_TIME));
+            long startMinutes = inaccurateTime.getMinutes(start);
+            // поток времени от start
+            Stream<Long> timeStream = Stream.iterate(startMinutes, val -> val + STEP_TIME).limit(count);
+            // ни один элемент потока не соответствуют критерию "занято"
+            return timeStream.noneMatch(time -> busyMap.containsKey(time));
+        } else {
+            // отсутствующее время - свободно
+            return true;
         }
-        return true;
     }
 
     public void freeTime(LocalDateTime start, Duration duration) {
-        long time = Timestamp.valueOf(start).getTime();
-        long limit = Timestamp.valueOf(start.plus(duration)).getTime();
-        while (time < limit) {
-            if (busyMap.containsKey(time) && busyMap.get(time)) {
-                busyMap.remove(time);
-            } else {
-                throw new RuntimeException("Время " + time + " просто не может быть не занято");
-            }
-            time += STEP_TIME;
-        }
+        long count = (long) Math.ceil(((double)duration.toMinutes() / STEP_TIME));
+        // поток времени от start
+        Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
+        // найти и удалить занятые моменты
+        timeStream.filter(time -> busyMap.containsKey(time) ? busyMap.get(time) : false).forEach(time -> busyMap.remove(time));
     }
 
     @Override
     public String toString() {
-        String res = "TaskManager{\n";
-        for (Task task : taskList.values()) {
-            res = res.concat(task.toString());
-        }
-        for (Task task : epicList.values()) {
-            res = res.concat(task.toString());
-        }
-        res = res.concat("}\n");
-        return res;
+        Stream<String> strings = Stream.concat(Stream.of(taskList.values().toString()), Stream.of(epicList.values().toString()));
+        return strings.reduce("TaskManager{\n", String::concat).concat("}\n");
     }
 }

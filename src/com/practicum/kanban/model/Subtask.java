@@ -21,6 +21,24 @@ public class Subtask extends Task {
         super(name, description);
     }
 
+    public Subtask(String name, String description, LocalDateTime startTime, Duration duration) {
+        super(name, description);
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+
+    public Subtask(String name, String description, LocalDateTime startTime, long duration) {
+        super(name, description);
+        this.startTime = startTime;
+        this.duration = Duration.ofMinutes(duration);
+    }
+
+    private Subtask(int id, String name, String description, Status status,  LocalDateTime startTime, long duration, int parentId) {
+        this(name, description, status);
+        this.setTaskId(id);
+        this.setParentId(parentId);
+    }
+
     public Subtask(String name, Status status) {
         super(name, status);
     }
@@ -63,6 +81,20 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
+        String startTime = "0";
+        long duration = 0;
+        if (this.startTime != null) {
+            startTime = this.startTime.toString();
+            duration = this.duration.toMinutes();
+        }
+        return "SUBTASK," +
+                name + "," +
+                status + "," +
+                startTime  + "," +
+                duration;
+    }
+
+    public String toFileString() {
         String startTime = "0";
         long duration = 0;
         if (this.startTime != null) {

@@ -68,12 +68,16 @@ public class Task {
         this.setTaskId(id);
     }
 
-    private Task(int id, String name, String description, Status status, LocalDateTime startTime, long duration) {
-        this(name, description, status);
-        this.setTaskId(id);
-
+    public Task(String name, String description, LocalDateTime startTime, long duration) {
+        this(name, description);
         this.startTime = startTime;
         this.duration = Duration.ofMinutes(duration);
+    }
+
+    private Task(int id, String name, String description, Status status, LocalDateTime startTime, long duration) {
+        this(name, description, startTime, duration);
+        this.setTaskId(id);
+        this.setStatus(status);
     }
 
     public String getName() {
@@ -112,7 +116,7 @@ public class Task {
         return Optional.ofNullable(duration);
     }
 
-    // сеттеры времени начала задачи и окончания объеденины в один, поскольку по отдельности они бессмысленны
+    // сеттеры времени начала задачи и продолжительности объеденины в один, поскольку по отдельности они бессмысленны
     public void setTime(LocalDateTime start, Duration duration) {
         this.startTime = start;
         this.duration = duration;
@@ -159,10 +163,20 @@ public class Task {
         String startTime = "0";
         long duration = 0;
         if (this.startTime != null) {
-            //startTime = Timestamp.valueOf(this.startTime).getTime();
-            //startTime = Instant.from(this.startTime).getEpochSecond();
-            //startTime = Instant.from(this.startTime)
-            //duration = this.duration.toMinutes();
+            startTime = this.startTime.toString();
+            duration = this.duration.toMinutes();
+        }
+        return "TASK," +
+                name + "," +
+                status + "," +
+                startTime  + "," +
+                duration;
+    }
+
+    public String toFileString() {
+        String startTime = "0";
+        long duration = 0;
+        if (this.startTime != null) {
             startTime = this.startTime.toString();
             duration = this.duration.toMinutes();
         }
@@ -174,6 +188,7 @@ public class Task {
                 duration  + "," +
                 description + ",";
     }
+
 
     public static Task fromStrings(String[] values) {
         if (values[4].equals("0")) {

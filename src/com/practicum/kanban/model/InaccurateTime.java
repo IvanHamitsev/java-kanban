@@ -18,12 +18,15 @@ public class InaccurateTime {
     }
 
     public LocalDateTime getLocalDateTime(long minutes) {
-        Instant instant = Instant.ofEpochSecond(60 * step * Math.round(minutes / step));
+        // здесь нужно не математическое округление, а отбрасывание
+        Instant instant = Instant.ofEpochSecond(60 * step * (long)((double)minutes / step));
         return LocalDateTime.ofInstant(instant, zoneId);
     }
 
     public long getMinutes(LocalDateTime localDateTime) {
         Instant instant = localDateTime.atZone(zoneId).toInstant();
-        return Math.round((instant.getEpochSecond() / 60 ) / step) * step;
+        long real_minutes = (long) ((double)instant.getEpochSecond() / 60);
+        long round_minutes = (long) ((double)real_minutes / step) * step;
+        return round_minutes;
     }
 }

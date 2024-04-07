@@ -24,6 +24,10 @@ public class Epic extends Task {
         super(name, description);
     }
 
+    public Epic(String name, String description, LocalDateTime startTime, Duration duration) {
+        super(name, description, startTime, duration);
+    }
+
     public Epic(String name, Status status) {
         super(name, status);
     }
@@ -34,11 +38,15 @@ public class Epic extends Task {
 
     public Epic(Epic in) {
         super(in);
-        for (Subtask subtask : in.getSubtasks().values()) {
-            // добавить в наш Map копию subtask
-            Subtask newSubtask = subtask.copy();
-            subtasks.put(newSubtask.getTaskId(), newSubtask);
+        if (null != this.startTime) {
+            this.endTime = this.startTime.plus(this.duration);
         }
+        in.getSubtasks().values().stream()
+                .forEach(subtask -> {
+                    // добавить в this Map копию subtask
+                    Subtask newSubtask = subtask.copy();
+                    this.subtasks.put(newSubtask.getTaskId(), newSubtask);
+                });
     }
 
     private Epic(int id, String name, String description, Status status) {
@@ -46,12 +54,17 @@ public class Epic extends Task {
         this.setTaskId(id);
     }
 
-    private Epic(int id, String name, String description, Status status, LocalDateTime startTime, long duration) {
-        this(name, description, status);
-        this.setTaskId(id);
+    private Epic(String name, String description, LocalDateTime startTime, long duration) {
+        this(name, description);
         this.startTime = startTime;
         this.duration = Duration.ofMinutes(duration);
-        this.endTime = this.startTime.plus(this.duration);
+        this.endTime = startTime.plus(this.duration);
+    }
+
+    private Epic(int id, String name, String description, Status status, LocalDateTime startTime, long duration) {
+        this(name, description, startTime, duration);
+        this.setTaskId(id);
+        this.setStatus(status);
     }
 
     public HashMap<Integer, Subtask> getSubtasks() {
@@ -76,23 +89,26 @@ public class Epic extends Task {
 
     // расширяющее обновление времени Epic - простое сравнение со старыми значениями
     public void expandingTimeUpdate(LocalDateTime start, LocalDateTime finish) {
-        if (start.isBefore(this.startTime)) {
+        // возможно эпик ещё не получил времени старта/окончания
+        if (this.startTime == null) {
             this.startTime = start;
-        }
-
-        if(finish.isAfter(this.endTime)) {
             this.endTime = finish;
-        }
 
+        } else {
+            if (start.isBefore(this.startTime)) {
+                this.startTime = start;
+            }
+            if (finish.isAfter(this.endTime)) {
+                this.endTime = finish;
+            }
+        }
         this.duration = Duration.between(this.startTime, this.endTime);
     }
 
     // сужающее обновление времени Epic требует перебора всех подзадач
     public void reduceTimeUpdate() {
-        // значения будут пересчитаны
-        this.startTime = null;
-        this.endTime = null;
-        this.duration = null;
+        // значения времени будут пересчитаны, начать с null значений
+        clearTime();
         // перебираем все подзадачи с помощью stream
         this.subtasks.values().stream()
                 // взять первое notNull значение времени подзадачи как начальное
@@ -103,7 +119,7 @@ public class Epic extends Task {
                     }
                 })
                 // проверить время старта/окончания подзадачи на предмент возможно актуального для Epic
-                .peek((Subtask s) -> {
+                .forEach((Subtask s) -> {
                     if (s.getStartTime().isPresent() && s.getStartTime().get().isBefore(this.startTime)) {
                         this.startTime = s.getStartTime().get();
                     }
@@ -133,12 +149,29 @@ public class Epic extends Task {
             //LocalDateTime ldt = LocalDateTime.parse(startTime);
             //System.out.println(ldt);
         }
+        return "EPIC," +
+                name + "," +
+                status + "," +
+                startTime + "," +
+                duration;
+    }
+
+    public String toFileString() {
+        String startTime = "0";
+        long duration = 0;
+        if (this.startTime != null) {
+            startTime = this.startTime.toString();
+            duration = this.duration.toMinutes();
+
+            //LocalDateTime ldt = LocalDateTime.parse(startTime);
+            //System.out.println(ldt);
+        }
         return id + "," +
                 "EPIC," +
                 name + "," +
                 status + "," +
-                startTime  + "," +
-                duration  + "," +
+                startTime + "," +
+                duration + "," +
                 description + ",";
     }
 

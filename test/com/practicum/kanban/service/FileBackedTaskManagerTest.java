@@ -12,6 +12,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,7 +30,7 @@ class FileBackedTaskManagerTest {
     @AfterAll
     static void deleteTempFile() {
         // удалить временный файл за собой
-        ((FileBackedTaskManager)taskManager).deleteKanbanFile();
+        ((FileBackedTaskManager) taskManager).deleteKanbanFile();
     }
 
     @AfterEach
@@ -98,14 +100,15 @@ class FileBackedTaskManagerTest {
         newTaskManager.addSubtask(subtask2);
 
         assertTrue(newTaskManager.getTaskList().size() + newTaskManager.getEpicList().size() +
-                        newTaskManager.getSubtaskList(epic1.getTaskId()).size() ==  6,
+                        newTaskManager.getSubtaskList(epic1.getTaskId()).size() == 6,
                 "В первоначальной коллекции сохранены не все элементы");
 
-        // создадим события истории
-        newTaskManager.getTask(task1.getTaskId());
-        newTaskManager.getEpic(epic1.getTaskId());
-        newTaskManager.getSubtask(subtask1.getTaskId());
-        newTaskManager.getTask(task1.getTaskId()); // повтор не влияет на число событий в истории
+        Task i;
+        // создадим 3 события истории
+        i = newTaskManager.getTask(task1.getTaskId());
+        i = newTaskManager.getEpic(epic1.getTaskId());
+        i = newTaskManager.getSubtask(subtask1.getTaskId());
+        i = newTaskManager.getTask(task1.getTaskId()); // повтор не влияет на число событий в истории
 
         try (BufferedReader reader = Files.newBufferedReader(Paths.get("test.csv"))) {
             int lineCount = 0;
@@ -141,19 +144,19 @@ class FileBackedTaskManagerTest {
         newTaskManager.addSubtask(subtask2);
 
         assertTrue(newTaskManager.getTaskList().size() + newTaskManager.getEpicList().size() +
-                        newTaskManager.getSubtaskList(epic1.getTaskId()).size() ==  6,
+                        newTaskManager.getSubtaskList(epic1.getTaskId()).size() == 6,
                 "В первоначальной коллекции сохранены не все элементы");
 
         TaskManager copyOfTaskManager = FileBackedTaskManager.loadFromFile("test.csv");
 
         assertTrue(copyOfTaskManager.getTaskList().size() + copyOfTaskManager.getEpicList().size() +
-                        copyOfTaskManager.getSubtaskList(epic1.getTaskId()).size() ==  6,
+                        copyOfTaskManager.getSubtaskList(epic1.getTaskId()).size() == 6,
                 "В копии FileBackedTaskManager, полученной с помощью loadFromFile не все элементы");
 
         copyOfTaskManager = new FileBackedTaskManager("test.csv");
 
         assertTrue(copyOfTaskManager.getTaskList().size() + copyOfTaskManager.getEpicList().size() +
-                        copyOfTaskManager.getSubtaskList(epic1.getTaskId()).size() ==  6,
+                        copyOfTaskManager.getSubtaskList(epic1.getTaskId()).size() == 6,
                 "В копии FileBackedTaskManager, полученной с помощью конструктора не все элементы");
 
         newTaskManager.deleteKanbanFile();
@@ -173,6 +176,44 @@ class FileBackedTaskManagerTest {
 
         assertNotNull(getTask);
         assertTrue(task.equals(getTask));
+    }
+
+    @Test
+    void canNotAddOverlappingTask() {
+        LocalDateTime dateTime = LocalDateTime.of(2024, 4, 6, 12, 0);
+
+        Task task1 = new Task("Задача1", "Описание1", dateTime, Duration.ofMinutes(15));
+        Task task2 = new Task("Задача2", "Описание2", dateTime.plus(Duration.ofMinutes(15)), Duration.ofMinutes(15));
+        // время задачи пересекается
+        Task task3 = new Task("Задача3", "Описание3", dateTime.plus(Duration.ofMinutes(14)), Duration.ofMinutes(1));
+
+        Epic epic1 = new Epic("Эпик1", "ЭпикОписание1");
+
+        Subtask sub1 = new Subtask("Подзад1", "ПодзадОписание1", dateTime.plus(Duration.ofHours(3)), Duration.ofMinutes(60));
+        Subtask sub2 = new Subtask("Подзад2", "ПодзадОписание2", dateTime.plus(Duration.ofHours(4)), Duration.ofMinutes(61));
+        // время задачи пересекается
+        Subtask sub3 = new Subtask("Подзад3", "ПодзадОписание3", dateTime.plus(Duration.ofHours(5)), Duration.ofMinutes(60));
+
+        int epic1Id = taskManager.addEpic(epic1);
+        // надо подготовить subtask
+        sub1.setParentId(epic1Id);
+        sub2.setParentId(epic1Id);
+        sub3.setParentId(epic1Id);
+
+        int task1Id = taskManager.addTask(task1);
+        assertTrue(task1Id > 0, "Задача в пустой менеджер не добавлена");
+        int task2Id = taskManager.addTask(task2);
+        assertTrue(task2Id > 0, "Непересекающаяся задача не добавлена");
+        int task3Id = taskManager.addTask(task3);
+        assertTrue(task3Id < 0, "Пересекающаяся задача добавлена");
+
+        int sub1Id = taskManager.addSubtask(sub1);
+        assertTrue(sub1Id > 0, "Непересекающаяся подзадача в путом эпике не добавлена");
+        int sub2Id = taskManager.addSubtask(sub2);
+        assertTrue(sub2Id > 0, "Непересекающаяся подзадача в непустом эпике не добавлена");
+        int sub3Id = taskManager.addSubtask(sub3);
+        assertTrue(sub3Id < 0, "Пересекающаяся подзадача добавлена");
+
     }
 
     @Test
