@@ -1,10 +1,7 @@
 package com.practicum.kanban.model;
 
-import java.sql.Timestamp;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Optional;
 
 public class Task {
