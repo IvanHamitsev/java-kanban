@@ -431,7 +431,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void reservTime(LocalDateTime start, Duration duration) {
         if (null != start) {
             // нужно округлить вверх, но так, чтобы для целого числа не получилось +1
-            long count = (long) Math.ceil(((double)duration.toMinutes() / STEP_TIME));
+            long count = (long) Math.ceil(((double) duration.toMinutes() / STEP_TIME));
             // поток времени от start
             Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
             // занять все моменты
@@ -455,11 +455,13 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public void freeTime(LocalDateTime start, Duration duration) {
-        long count = (long) Math.ceil(((double)duration.toMinutes() / STEP_TIME));
-        // поток времени от start
-        Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
-        // найти и удалить занятые моменты
-        timeStream.filter(time -> busyMap.containsKey(time) ? busyMap.get(time) : false).forEach(time -> busyMap.remove(time));
+        if (null != start) {
+            long count = (long) Math.ceil(((double) duration.toMinutes() / STEP_TIME));
+            // поток времени от start
+            Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
+            // найти и удалить занятые моменты
+            timeStream.filter(time -> busyMap.containsKey(time) ? busyMap.get(time) : false).forEach(time -> busyMap.remove(time));
+        }
     }
 
     @Override

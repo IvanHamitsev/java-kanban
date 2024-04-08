@@ -3,7 +3,6 @@ package com.practicum.kanban;
 import com.practicum.kanban.model.*;
 import com.practicum.kanban.service.*;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
