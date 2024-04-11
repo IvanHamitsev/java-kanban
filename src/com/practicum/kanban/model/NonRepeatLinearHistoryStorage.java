@@ -91,10 +91,12 @@ public class NonRepeatLinearHistoryStorage<T extends Task> implements HistorySto
     public void clear() {
         head = null;
         tail = null;
-        for (Node node : linksStorage.values()) {
+
+        linksStorage.values().stream().forEach(node -> {
             node.setPrev(null);
             node.setNext(null);
-        }
+        });
+
         linksStorage.clear();
     }
 

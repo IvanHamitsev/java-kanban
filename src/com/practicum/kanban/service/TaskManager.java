@@ -35,11 +35,11 @@ public interface TaskManager {
     int addSubtask(Subtask subtask);
 
     //  e. Обновление. Новая версия объекта с верным идентификатором передаётся в виде параметра.
-    void updateTask(Task task);
+    int updateTask(Task task);
 
-    void updateEpic(Epic epic);
+    int updateEpic(Epic epic);
 
-    void updateSubtask(Subtask subtask);
+    int updateSubtask(Subtask subtask);
 
     // f. Удаление по идентификатору.
     void deleteTask(int id);
@@ -50,4 +50,7 @@ public interface TaskManager {
 
     // История операций получения всех типов задач
     List<Task> getHistory();
+
+    // Получения списка задач, отсортированных по приоритету (времени старта)
+    public List<Task> getPrioritizedTasks();
 }
