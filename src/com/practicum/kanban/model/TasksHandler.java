@@ -1,52 +1,41 @@
 package com.practicum.kanban.model;
 
-import com.sun.net.httpserver.HttpExchange;
+import com.practicum.kanban.service.TaskManager;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+public class TasksHandler extends KanbanHandler<Task> implements HttpHandler {
 
-public class TasksHandler implements HttpHandler {
-
+    public TasksHandler() {
+        super();
+    }
 
     @Override
-    public void handle(HttpExchange httpExchange) throws IOException {
-        String metod = httpExchange.getRequestMethod();
-        switch (metod) {
-            case "GET":
-                AnswerSet result = parseGet(httpExchange);
-                httpExchange.sendResponseHeaders(result.code, 0);
-                sendBody(httpExchange, result.body);
-
-                break;
-            case "POST":
-        }
-
-
+    public String getAllTasksFunction() {
+        return JsonConverter.convert(taskManager.getTaskList());
     }
 
-    private void sendBody(HttpExchange httpExchange, String body) throws IOException {
-        try (OutputStream os = httpExchange.getResponseBody()) {
-            os.write(body.getBytes());
-        }
+    @Override
+    public Task getTaskFunction(Integer id) {
+        return taskManager.getTask(id);
     }
 
-    private AnswerSet parseGet(HttpExchange httpExchange) {
-        AnswerSet result = null;
-        String[] path = httpExchange.getRequestURI().getPath().split("/");
-        // В случае /tasks вызвать метод getTasks()
-        if (path.length == 2) {
+    @Override
+    public Integer addTaskFunction(Task task) {
+        return taskManager.addTask(task);
+    }
 
-        }
-        // В случае /tasks/{id} вызываем метод getTaskById(id)
-        if (path.length == 3) {
+    @Override
+    public Integer updateTaskFunction(Task task) {
+        return taskManager.updateTask(task);
+    }
 
-        }
-        // 400 Bad Request
-        return new AnswerSet(400, "");
+    @Override
+    public void deleteTaskFunction(Integer id) {
+        taskManager.deleteTask(id);
+    }
+
+    @Override
+    public Task convertToTFunction(String json) {
+        return JsonConverter.convertToTask(json);
     }
 }

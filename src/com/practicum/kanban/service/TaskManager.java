@@ -11,7 +11,10 @@ public interface TaskManager {
 
     Map<Integer, Epic> getEpicList();
 
+    // Получение списка всех подзадач.
     Map<Integer, Subtask> getSubtaskList(int id);
+
+    Map<Integer, Subtask> getSubtaskList();
 
     // b. Удаление всех задач.
     void deleteAllTasks();

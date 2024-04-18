@@ -95,6 +95,20 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
+    // Получение списка всех подзадач.
+    @Override
+    public Map<Integer, Subtask> getSubtaskList() {
+        Map<Integer, Subtask> result = null;
+        epicList.values().stream()
+                .forEach(e -> {
+                    e.getSubtasks().values().stream()
+                            .forEach(sub -> {
+                                result.put(sub.getTaskId(), sub);
+                            });
+                });
+        return result;
+    }
+
     // b. Удаление всех задач.
     @Override
     public void deleteAllTasks() {

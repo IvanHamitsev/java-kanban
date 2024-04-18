@@ -8,12 +8,26 @@ import java.net.InetSocketAddress;
 
 public class HttpTaskServer {
     private static int PORT;
-    HttpServer httpServer;
+    private static HttpServer httpServer;
+    private static TaskManager taskManager;
 
-    public HttpTaskServer(int port) throws IOException {
+    public static void main(String[] args) {
+        try {
+            initHttpTaskServer(8080, Managers.getFileTaskManager("kanban.csv"));
+            serverStart();
+
+        } catch (IOException e) {
+            System.out.println("Не удалось сконфигурировать http server");
+        }
+
+    }
+
+    public static void initHttpTaskServer(int port, TaskManager manager) throws IOException {
         PORT = port;
         httpServer = HttpServer.create();
         httpServer.bind(new InetSocketAddress(PORT), 0);
+
+        taskManager = manager;
 
         httpServer.createContext("/tasks", new TasksHandler());
         httpServer.createContext("/subtasks", new SubtasksHandler());
@@ -22,21 +36,20 @@ public class HttpTaskServer {
         httpServer.createContext("/prioritized", new PrioritizeHandler());
     }
 
-    public HttpTaskServer() throws IOException {
-        this(8080);
-    }
-
-    public void serverStart() {
+    public static void serverStart() {
         httpServer.start();
     }
 
-    public void serverStop() {
+    public static void serverStop() {
         httpServer.stop(0);
     }
 
-    public HttpServer getServer() {
-        return httpServer;
+    public static TaskManager getTaskManager() {
+        return taskManager;
     }
 
-
+    // пересоздавать TaskManager требуется например при тестировании
+    public static void setTaskManager(TaskManager tm) {
+        taskManager = tm;
+    }
 }
