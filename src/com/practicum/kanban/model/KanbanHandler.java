@@ -91,7 +91,7 @@ public abstract class KanbanHandler<T extends Task> implements HttpHandler {
             if (path.length == 2) {
                 Integer id = addTaskFunction(task);
                 if (0 < id) {
-                    return new AnswerSet(200, JsonConverter.convert(id));
+                    return new AnswerSet(201, JsonConverter.convert(id));
                 } else {
                     // если задача пересекается с существующей, вернуть 406
                     return new AnswerSet(406, "");

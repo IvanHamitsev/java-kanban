@@ -41,7 +41,7 @@ public class HttpTaskServer {
     }
 
     public static void serverStop() {
-        httpServer.stop(0);
+        httpServer.stop(1);
     }
 
     public static TaskManager getTaskManager() {

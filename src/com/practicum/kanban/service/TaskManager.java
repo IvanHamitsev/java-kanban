@@ -55,5 +55,5 @@ public interface TaskManager {
     List<Task> getHistory();
 
     // Получения списка задач, отсортированных по приоритету (времени старта)
-    public List<Task> getPrioritizedTasks();
+    List<Task> getPrioritizedTasks();
 }
