@@ -2,7 +2,10 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.JsonConverter;
 import com.practicum.kanban.model.Task;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,7 +15,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpTaskServerTaskTest {
@@ -22,33 +24,25 @@ class HttpTaskServerTaskTest {
 
     @BeforeAll
     static void initHttpTaskTest() {
-        // создать
-        try {
-            HttpTaskServer.initHttpTaskServer(port, Managers.getFileTaskManager());
-        } catch (IOException e) {
-            System.out.println("создание HTTP сервера вызывает исключение");
-        }
+        // создать только клиент, сервер будет пересоздаваться для каждого теста
         httpClient = HttpClient.newHttpClient();
-        HttpTaskServer.serverStart();
     }
 
     @BeforeEach
     void prepareHttpServerForTest() {
-        // для чистого эксперимента надо пересоздать TaskManager
-        HttpTaskServer.setTaskManager(Managers.getFileTaskManager());
+        try {
+            HttpTaskServer.initHttpTaskServer(port, Managers.getFileTaskManager());
+            HttpTaskServer.serverStart();
+        } catch (IOException e) {
+            System.out.println("создание HTTP сервера вызывает исключение");
+        }
     }
 
     @AfterEach
     void closeHttpServerAfterTest() {
         // очистить taskManager
-        HttpTaskServer.getTaskManager().deleteAllTasks();
-        HttpTaskServer.getTaskManager().deleteAllEpics();
-        // удалить временный файл
-        ((FileBackedTaskManager) HttpTaskServer.getTaskManager()).deleteKanbanFile();
-    }
-
-    @AfterAll
-    static void stopHttpServer() {
+        HttpTaskServer.getTaskManager().clearInstance();
+        // остановить сервер
         HttpTaskServer.serverStop();
     }
 
@@ -117,25 +111,6 @@ class HttpTaskServerTaskTest {
     void shouldFormTaskList() {
         HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
 
-        // получить список задач
-        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
-        HttpRequest request1 = HttpRequest.newBuilder()
-                .uri(uri)
-                .GET()
-                .version(HttpClient.Version.HTTP_1_1)
-                .header("Accept", "application/json")
-                .build();
-        // отправить запрос
-        try {
-            HttpResponse<String> response = httpClient.send(request1, handler);
-            // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не вернул список задач");
-            var taskMap = JsonConverter.convertToMap(response.body());
-            assertTrue(taskMap.size() == 3, "полученный список отличается от созданных задач");
-        } catch (InterruptedException | IOException e) {
-            System.out.println("отправка HTTP запроса на получение задачи вызывает исключение");
-        }
-
         // подготовить данные
         Task task1 = new Task("Задача1", "Описание1");
         int task1Id = task1.getTaskId();
@@ -146,9 +121,9 @@ class HttpTaskServerTaskTest {
 
         // подготовить запросы
 
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
         String requestBody1 = JsonConverter.convert(task1);
-        request1 = HttpRequest.newBuilder()
+        HttpRequest request1 = HttpRequest.newBuilder()
                 .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody1))
                 .version(HttpClient.Version.HTTP_1_1)

@@ -25,6 +25,12 @@ public class JsonConverter {
     static class UserMapToken extends TypeToken<Map<Integer, Task>> {
     }
 
+    static class UserEpicMapToken extends TypeToken<Map<Integer, Epic>> {
+    }
+
+    static class UserSubtaskMapToken extends TypeToken<Map<Integer, Subtask>> {
+    }
+
     static class UserListToken extends TypeToken<List<Task>> {
     }
 
@@ -74,6 +80,14 @@ public class JsonConverter {
         return gson.fromJson(inp, new UserMapToken().getType());
     }
 
+    public static Map<Integer, Epic> convertToEpicMap(String inp) {
+        return gson.fromJson(inp, new UserEpicMapToken().getType());
+    }
+
+    public static Map<Integer, Subtask> convertToSubtaskMap(String inp) {
+        return gson.fromJson(inp, new UserSubtaskMapToken().getType());
+    }
+
     public static List<Task> convertToList(String inp) {
         return gson.fromJson(inp, new UserListToken().getType());
     }
@@ -82,11 +96,11 @@ public class JsonConverter {
         return gson.fromJson(inp, Task.class);
     }
 
-    public static Subtask convertToSubtask(String inp) {
-        return gson.fromJson(inp, Subtask.class);
-    }
-
     public static Epic convertToEpic(String inp) {
         return gson.fromJson(inp, Epic.class);
+    }
+
+    public static Subtask convertToSubtask(String inp) {
+        return gson.fromJson(inp, Subtask.class);
     }
 }

@@ -19,7 +19,6 @@ public class HttpTaskServer {
         } catch (IOException e) {
             System.out.println("Не удалось сконфигурировать http server");
         }
-
     }
 
     public static void initHttpTaskServer(int port, TaskManager manager) throws IOException {

@@ -1,6 +1,5 @@
 package com.practicum.kanban.model;
 
-import com.practicum.kanban.service.TaskManager;
 import com.sun.net.httpserver.HttpHandler;
 
 public class TasksHandler extends KanbanHandler<Task> implements HttpHandler {

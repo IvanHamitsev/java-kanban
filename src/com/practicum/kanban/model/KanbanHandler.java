@@ -101,10 +101,10 @@ public abstract class KanbanHandler<T extends Task> implements HttpHandler {
             if (path.length == 3) {
                 try {
                     // собственно сам id из пути нам не нужен, он лишь признак выполнить обновление
-                    if (0 < Integer.parseInt(path[3])) {
+                    if (0 < Integer.parseInt(path[2])) {
                         Integer id = updateTaskFunction(task);
                         if (0 < id) {
-                            return new AnswerSet(200, "");
+                            return new AnswerSet(201, "");
                         } else {
                             return new AnswerSet(406, "");
                         }

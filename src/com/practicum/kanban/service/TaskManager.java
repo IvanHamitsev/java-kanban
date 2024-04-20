@@ -56,4 +56,7 @@ public interface TaskManager {
 
     // Получения списка задач, отсортированных по приоритету (времени старта)
     List<Task> getPrioritizedTasks();
+
+    // Метод для очистки экземпляра менеджера перед удалением
+    void clearInstance();
 }

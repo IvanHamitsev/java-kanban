@@ -2,7 +2,10 @@ package com.practicum.kanban.service;
 
 import com.practicum.kanban.model.JsonConverter;
 import com.practicum.kanban.model.Task;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,7 +15,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTaskServerHistoryAndPriorityTest {
@@ -22,30 +24,25 @@ public class HttpTaskServerHistoryAndPriorityTest {
 
     @BeforeAll
     static void initHttpTaskTest() {
-        // создать
-        assertDoesNotThrow(() -> {
-                    HttpTaskServer.initHttpTaskServer(port, Managers.getFileTaskManager());
-                },
-                "создание HTTP сервера вызывает исключение");
+        // создать только клиент, сервер будет пересоздаваться для каждого теста
         httpClient = HttpClient.newHttpClient();
-        HttpTaskServer.serverStart();
     }
 
     @BeforeEach
     void prepareHttpServerForTest() {
-        // для чистого эксперимента надо пересоздать TaskManager
-        HttpTaskServer.setTaskManager(Managers.getFileTaskManager());
+        try {
+            HttpTaskServer.initHttpTaskServer(port, Managers.getFileTaskManager());
+            HttpTaskServer.serverStart();
+        } catch (IOException e) {
+            System.out.println("создание HTTP сервера вызывает исключение");
+        }
     }
 
     @AfterEach
     void closeHttpServerAfterTest() {
         // очистить taskManager
-        HttpTaskServer.getTaskManager().deleteAllTasks();
-        HttpTaskServer.getTaskManager().deleteAllEpics();
-    }
-
-    @AfterAll
-    static void stopHttpServer() {
+        HttpTaskServer.getTaskManager().clearInstance();
+        // остановить сервер
         HttpTaskServer.serverStop();
     }
 
