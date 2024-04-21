@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class HttpTaskServer {
-    private static int PORT;
+    public static final int PORT = 8080;
     private static HttpServer httpServer;
     private static TaskManager taskManager;
 
     public static void main(String[] args) {
         try {
-            initHttpTaskServer(8080, Managers.getFileTaskManager("kanban.csv"));
+            initHttpTaskServer(Managers.getFileTaskManager("kanban.csv"));
             serverStart();
 
         } catch (IOException e) {
@@ -21,13 +21,10 @@ public class HttpTaskServer {
         }
     }
 
-    public static void initHttpTaskServer(int port, TaskManager manager) throws IOException {
-        PORT = port;
+    public static void initHttpTaskServer(TaskManager manager) throws IOException {
         httpServer = HttpServer.create();
         httpServer.bind(new InetSocketAddress(PORT), 0);
-
         taskManager = manager;
-
         httpServer.createContext("/tasks", new TasksHandler());
         httpServer.createContext("/subtasks", new SubtasksHandler());
         httpServer.createContext("/epics", new EpicHandler());

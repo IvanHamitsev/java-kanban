@@ -15,12 +15,12 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpTaskServerTaskTest {
     static HttpClient httpClient;
     static String serverUrlPart = "http://localhost";
-    static int port = 8080;
 
     @BeforeAll
     static void initHttpTaskTest() {
@@ -31,7 +31,7 @@ class HttpTaskServerTaskTest {
     @BeforeEach
     void prepareHttpServerForTest() {
         try {
-            HttpTaskServer.initHttpTaskServer(port, Managers.getFileTaskManager());
+            HttpTaskServer.initHttpTaskServer(Managers.getFileTaskManager());
             HttpTaskServer.serverStart();
         } catch (IOException e) {
             System.out.println("создание HTTP сервера вызывает исключение");
@@ -48,7 +48,7 @@ class HttpTaskServerTaskTest {
 
     @Test
     void shouldCreateTask() {
-        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        URI uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
 
         // подготовить данные
         Task task = new Task("Задача", "Описание");
@@ -68,13 +68,13 @@ class HttpTaskServerTaskTest {
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на создание задачи вызывает исключение");
         }
 
         // получить задачу обратно
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks/" + taskId);
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks/" + taskId);
         request1 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -83,7 +83,7 @@ class HttpTaskServerTaskTest {
                 .build();
 
         // получить другую задачу
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks/" + taskId + 1);
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks/" + taskId + 1);
         HttpRequest request2 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -95,13 +95,13 @@ class HttpTaskServerTaskTest {
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не вернул задачу");
+            assertEquals(200, response.statusCode(), "сервер не вернул задачу");
             Task inpTask = JsonConverter.convertToTask(response.body());
             assertTrue(task.equals(inpTask), "получена задача не эквивалентная исходной");
 
             response = httpClient.send(request2, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 404, "сервер вернул несуществующую задачу");
+            assertEquals(404, response.statusCode(), "сервер вернул несуществующую задачу");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на получение задачи вызывает исключение");
         }
@@ -121,7 +121,7 @@ class HttpTaskServerTaskTest {
 
         // подготовить запросы
 
-        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        URI uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
         String requestBody1 = JsonConverter.convert(task1);
         HttpRequest request1 = HttpRequest.newBuilder()
                 .uri(uri)
@@ -149,19 +149,19 @@ class HttpTaskServerTaskTest {
         // отправить запросы
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу");
 
             response = httpClient.send(request2, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу");
 
             response = httpClient.send(request3, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на создание задачи вызывает исключение");
         }
 
         // получить список задач
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
         request1 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -172,9 +172,9 @@ class HttpTaskServerTaskTest {
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не вернул список задач");
+            assertEquals(200, response.statusCode(), "сервер не вернул список задач");
             var taskMap = JsonConverter.convertToMap(response.body());
-            assertTrue(taskMap.size() == 3, "полученный список отличается от созданных задач");
+            assertEquals(3, taskMap.size(), "полученный список отличается от созданных задач");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на получение задачи вызывает исключение");
         }
@@ -182,7 +182,7 @@ class HttpTaskServerTaskTest {
 
     @Test
     void shouldDeleteTask() {
-        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        URI uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
 
         // подготовить данные
         Task task = new Task("Задача", "Описание");
@@ -202,13 +202,13 @@ class HttpTaskServerTaskTest {
         try {
             HttpResponse<String> response = httpClient.send(request, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на создание задачи вызывает исключение");
         }
 
         // удалить задачу
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks/" + taskId);
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks/" + taskId);
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .DELETE()
@@ -219,13 +219,13 @@ class HttpTaskServerTaskTest {
         try {
             HttpResponse<String> response = httpClient.send(request, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не удалил задачу");
+            assertEquals(200, response.statusCode(), "сервер не удалил задачу");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на получение задачи вызывает исключение");
         }
 
         // получить список задач
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
         request = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -236,7 +236,7 @@ class HttpTaskServerTaskTest {
         try {
             HttpResponse<String> response = httpClient.send(request, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не вернул пустой список задач");
+            assertEquals(200, response.statusCode(), "сервер не вернул пустой список задач");
             var taskMap = JsonConverter.convertToMap(response.body());
             assertTrue(taskMap.isEmpty(), "получен не пустой список задач");
         } catch (InterruptedException | IOException e) {
@@ -246,7 +246,7 @@ class HttpTaskServerTaskTest {
 
     @Test
     void shouldNotAddIntersectionTask() {
-        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        URI uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
 
         // подготовить данные
         LocalDateTime dateTime = LocalDateTime.of(2024, 4, 6, 12, 0);
@@ -285,19 +285,19 @@ class HttpTaskServerTaskTest {
         // отправить запросы
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 1");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 1");
 
             response = httpClient.send(request2, handler);
-            assertTrue(response.statusCode() == 406, "сервер создал пересекающуюся задачу");
+            assertEquals(406, response.statusCode(), "сервер создал пересекающуюся задачу");
 
             response = httpClient.send(request3, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 3");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 3");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на создание задачи вызывает исключение");
         }
 
         // получить список задач
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
         request1 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -308,9 +308,9 @@ class HttpTaskServerTaskTest {
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не вернул список задач");
+            assertEquals(200, response.statusCode(), "сервер не вернул список задач");
             var taskMap = JsonConverter.convertToMap(response.body());
-            assertTrue(taskMap.size() == 2, "полученный список отличается от созданных задач");
+            assertEquals(2, taskMap.size(), "полученный список отличается от созданных задач");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на получение задачи вызывает исключение");
         }

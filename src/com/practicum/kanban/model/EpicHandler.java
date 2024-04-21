@@ -39,25 +39,25 @@ public class EpicHandler extends KanbanHandler<Epic> implements HttpHandler {
 
     // Для эпика обработка метода GET отличается
     @Override
-    protected AnswerSet parseGet(String[] path) {
+    protected HttpResponseWrapper parseGet(String[] path) {
         // В случае /tasks вызвать метод получения всех задач
         if (path.length == 2) {
             String str = getAllTasksFunction();
             // если эпика нет, будет пустой лист
-            return new AnswerSet(200, str);
+            return new HttpResponseWrapper(200, str);
         }
         // В случае /epics/{id}
         if (path.length == 3) {
             try {
                 Epic task = getTaskFunction(Integer.parseInt(path[2]));
                 if (null != task) {
-                    return new AnswerSet(200, JsonConverter.convert(task));
+                    return new HttpResponseWrapper(200, JsonConverter.convert(task));
                 } else {
-                    return new AnswerSet(404, "");
+                    return new HttpResponseWrapper(404, "");
                 }
             } catch (NumberFormatException e) {
                 // 400 Bad Request
-                return new AnswerSet(400, "");
+                return new HttpResponseWrapper(400, "");
             }
         }
         // В случае /epics/{id}/subtasks
@@ -65,16 +65,16 @@ public class EpicHandler extends KanbanHandler<Epic> implements HttpHandler {
             try {
                 var list = taskManager.getSubtaskList(Integer.parseInt(path[2]));
                 if (null != list) {
-                    return new AnswerSet(200, JsonConverter.convert(list));
+                    return new HttpResponseWrapper(200, JsonConverter.convert(list));
                 } else {
-                    return new AnswerSet(404, "");
+                    return new HttpResponseWrapper(404, "");
                 }
             } catch (NumberFormatException e) {
                 // 400 Bad Request
-                return new AnswerSet(400, "");
+                return new HttpResponseWrapper(400, "");
             }
         }
         // 400 Bad Request
-        return new AnswerSet(400, "");
+        return new HttpResponseWrapper(400, "");
     }
 }

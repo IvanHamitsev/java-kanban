@@ -15,12 +15,11 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class HttpTaskServerHistoryAndPriorityTest {
+class HttpTaskServerHistoryAndPriorityTest {
     static HttpClient httpClient;
     static String serverUrlPart = "http://localhost";
-    static int port = 8080;
 
     @BeforeAll
     static void initHttpTaskTest() {
@@ -31,7 +30,7 @@ public class HttpTaskServerHistoryAndPriorityTest {
     @BeforeEach
     void prepareHttpServerForTest() {
         try {
-            HttpTaskServer.initHttpTaskServer(port, Managers.getFileTaskManager());
+            HttpTaskServer.initHttpTaskServer(Managers.getFileTaskManager());
             HttpTaskServer.serverStart();
         } catch (IOException e) {
             System.out.println("создание HTTP сервера вызывает исключение");
@@ -48,7 +47,7 @@ public class HttpTaskServerHistoryAndPriorityTest {
 
     @Test
     void shouldFormHistory() {
-        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        URI uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
 
         // подготовить данные
         Task task1 = new Task("Задача1", "Описание1");
@@ -88,19 +87,19 @@ public class HttpTaskServerHistoryAndPriorityTest {
         // отправить запросы на создание задач
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 1");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 1");
 
             response = httpClient.send(request2, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 2");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 2");
 
             response = httpClient.send(request3, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 3");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 3");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на создание задачи вызывает исключение");
         }
 
         // получить задачи для формирования истории
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks/" + task1Id);
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks/" + task1Id);
         request1 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -108,7 +107,7 @@ public class HttpTaskServerHistoryAndPriorityTest {
                 .header("Accept", "application/json")
                 .build();
 
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks/" + task2Id);
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks/" + task2Id);
         request2 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -116,7 +115,7 @@ public class HttpTaskServerHistoryAndPriorityTest {
                 .header("Accept", "application/json")
                 .build();
 
-        uri = URI.create(serverUrlPart + ":" + port + "/tasks/" + task3Id);
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks/" + task3Id);
         request3 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -125,19 +124,19 @@ public class HttpTaskServerHistoryAndPriorityTest {
                 .build();
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
-            assertTrue(response.statusCode() == 200, "сервер не может отдать задачу 1");
+            assertEquals(200, response.statusCode(), "сервер не может отдать задачу 1");
 
             response = httpClient.send(request2, handler);
-            assertTrue(response.statusCode() == 200, "сервер не может отдать задачу 2");
+            assertEquals(200, response.statusCode(), "сервер не может отдать задачу 2");
 
             response = httpClient.send(request3, handler);
-            assertTrue(response.statusCode() == 200, "сервер не может отдать задачу 3");
+            assertEquals(200, response.statusCode(), "сервер не может отдать задачу 3");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на создание задачи вызывает исключение");
         }
 
         // запросить историю
-        uri = URI.create(serverUrlPart + ":" + port + "/history");
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/history");
         request1 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -147,9 +146,9 @@ public class HttpTaskServerHistoryAndPriorityTest {
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не вернул историю");
+            assertEquals(200, response.statusCode(), "сервер не вернул историю");
             var history = JsonConverter.convertToList(response.body());
-            assertTrue(history.size() == 3, "история сформирована неверно");
+            assertEquals(3, history.size(), "история сформирована неверно");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на получение истории вызывает исключение");
         }
@@ -157,7 +156,7 @@ public class HttpTaskServerHistoryAndPriorityTest {
 
     @Test
     void shouldFormPriorityList() {
-        URI uri = URI.create(serverUrlPart + ":" + port + "/tasks");
+        URI uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/tasks");
 
         // подготовить данные
         LocalDateTime dateTime = LocalDateTime.of(2024, 4, 6, 12, 0);
@@ -196,19 +195,19 @@ public class HttpTaskServerHistoryAndPriorityTest {
         // отправить запросы
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 1");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 1");
 
             response = httpClient.send(request2, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 2");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 2");
 
             response = httpClient.send(request3, handler);
-            assertTrue(response.statusCode() == 201, "сервер не может создать задачу 3");
+            assertEquals(201, response.statusCode(), "сервер не может создать задачу 3");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на создание задачи вызывает исключение");
         }
 
         // получить приоритетный список задач
-        uri = URI.create(serverUrlPart + ":" + port + "/prioritized");
+        uri = URI.create(serverUrlPart + ":" + HttpTaskServer.PORT + "/prioritized");
         request1 = HttpRequest.newBuilder()
                 .uri(uri)
                 .GET()
@@ -219,9 +218,9 @@ public class HttpTaskServerHistoryAndPriorityTest {
         try {
             HttpResponse<String> response = httpClient.send(request1, handler);
             // проверить статус код ответа
-            assertTrue(response.statusCode() == 200, "сервер не вернул приоритетный список задач");
+            assertEquals(200, response.statusCode(), "сервер не вернул приоритетный список задач");
             var taskList = JsonConverter.convertToList(response.body());
-            assertTrue(taskList.size() == 3, "полученный список отличается от созданных задач");
+            assertEquals(3, taskList.size(), "полученный список отличается от созданных задач");
         } catch (InterruptedException | IOException e) {
             System.out.println("отправка HTTP запроса на получение задачи вызывает исключение");
         }

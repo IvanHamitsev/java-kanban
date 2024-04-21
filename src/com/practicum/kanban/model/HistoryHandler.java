@@ -21,25 +21,25 @@ public class HistoryHandler implements HttpHandler {
         String metod = httpExchange.getRequestMethod();
         String[] path = httpExchange.getRequestURI().getPath().split("/");
         switch (metod) {
-            case "GET":
+            case HttpMethod.GET:
                 if (path.length == 2) {
                     String str = JsonConverter.convert(taskManager.getHistory());
-                    sendAnswer(httpExchange, new AnswerSet(200, str));
+                    sendAnswer(httpExchange, new HttpResponseWrapper(200, str));
                 } else {
-                    sendAnswer(httpExchange, new AnswerSet(400, ""));
+                    sendAnswer(httpExchange, new HttpResponseWrapper(400, ""));
                 }
                 break;
             default:
                 // 400 Bad Request
-                sendAnswer(httpExchange, new AnswerSet(400, ""));
+                sendAnswer(httpExchange, new HttpResponseWrapper(400, ""));
         }
 
     }
 
-    private void sendAnswer(HttpExchange httpExchange, AnswerSet set) throws IOException {
+    private void sendAnswer(HttpExchange httpExchange, HttpResponseWrapper set) throws IOException {
         try (OutputStream os = httpExchange.getResponseBody()) {
-            httpExchange.sendResponseHeaders(set.code, 0);
-            os.write(set.body.getBytes());
+            httpExchange.sendResponseHeaders(set.getCode(), 0);
+            os.write(set.getBody().getBytes());
         }
     }
 }
