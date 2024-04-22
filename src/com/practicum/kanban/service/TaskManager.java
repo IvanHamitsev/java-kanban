@@ -11,7 +11,10 @@ public interface TaskManager {
 
     Map<Integer, Epic> getEpicList();
 
+    // Получение списка всех подзадач.
     Map<Integer, Subtask> getSubtaskList(int id);
+
+    Map<Integer, Subtask> getSubtaskList();
 
     // b. Удаление всех задач.
     void deleteAllTasks();
@@ -52,5 +55,8 @@ public interface TaskManager {
     List<Task> getHistory();
 
     // Получения списка задач, отсортированных по приоритету (времени старта)
-    public List<Task> getPrioritizedTasks();
+    List<Task> getPrioritizedTasks();
+
+    // Метод для очистки экземпляра менеджера перед удалением
+    void clearInstance();
 }

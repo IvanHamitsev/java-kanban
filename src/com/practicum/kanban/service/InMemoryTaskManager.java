@@ -95,6 +95,20 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
+    // Получение списка всех подзадач.
+    @Override
+    public Map<Integer, Subtask> getSubtaskList() {
+        Map<Integer, Subtask> result = new HashMap<>();
+        epicList.values().stream()
+                .forEach(e -> {
+                    e.getSubtasks().values().stream()
+                            .forEach(sub -> {
+                                result.put(sub.getTaskId(), sub);
+                            });
+                });
+        return result;
+    }
+
     // b. Удаление всех задач.
     @Override
     public void deleteAllTasks() {
@@ -462,6 +476,12 @@ public class InMemoryTaskManager implements TaskManager {
             // найти и удалить занятые моменты
             timeStream.filter(time -> busyMap.containsKey(time) ? busyMap.get(time) : false).forEach(time -> busyMap.remove(time));
         }
+    }
+
+    @Override
+    public void clearInstance() {
+        this.deleteAllEpics();
+        this.deleteAllTasks();
     }
 
     @Override
