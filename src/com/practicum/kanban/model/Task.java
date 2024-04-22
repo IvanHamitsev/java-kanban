@@ -52,12 +52,16 @@ public class Task {
     }
 
     public Task(Task in) {
-        this.name = in.getName();
-        this.description = in.getDescription();
-        this.status = in.getStatus();
-        this.startTime = in.startTime;
-        this.duration = in.duration;
-        this.setTaskId(in.getTaskId());
+        if (null != in) {
+            this.name = in.getName();
+            this.description = in.getDescription();
+            this.status = in.getStatus();
+            this.startTime = in.startTime;
+            this.duration = in.duration;
+            this.setTaskId(in.getTaskId());
+        } else {
+            throw new IllegalArgumentException("Попытака создать Task по null образцу");
+        }
     }
 
     private Task(int id, String name, String description, Status status) {
@@ -115,8 +119,13 @@ public class Task {
 
     // сеттеры времени начала задачи и продолжительности объеденины в один, поскольку по отдельности они бессмысленны
     public void setTime(LocalDateTime start, Duration duration) {
-        this.startTime = start;
-        this.duration = duration;
+        if ((null != start) && (null != duration) && (1 <= duration.toMinutes())) {
+            this.startTime = start;
+            this.duration = duration;
+        } else {
+            throw new IllegalArgumentException("Некорректное время начала " + start +
+                    " с продолжительностью " + duration);
+        }
     }
 
     public void setStatus(Status status) {
@@ -166,7 +175,7 @@ public class Task {
         return "TASK," +
                 name + "," +
                 status + "," +
-                startTime  + "," +
+                startTime + "," +
                 duration;
     }
 
@@ -181,17 +190,21 @@ public class Task {
                 "TASK," +
                 name + "," +
                 status + "," +
-                startTime  + "," +
-                duration  + "," +
+                startTime + "," +
+                duration + "," +
                 description + ",";
     }
 
-
     public static Task fromStrings(String[] values) {
-        if (values[4].equals("0")) {
-            return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]));
+        if ((null != values) && (5 <= values.length)) {
+            if (values[4].equals("0")) {
+                return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]));
+            } else {
+                return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
+            }
         } else {
-            return new Task(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
+            throw new IllegalArgumentException("Параметры " + values +
+                    " не могут быть использованы в качестве описания новой Task");
         }
     }
 }

@@ -87,20 +87,25 @@ public class Epic extends Task {
 
     // расширяющее обновление времени Epic - простое сравнение со старыми значениями
     public void expandingTimeUpdate(LocalDateTime start, LocalDateTime finish) {
-        // возможно эпик ещё не получил времени старта/окончания
-        if (this.startTime == null) {
-            this.startTime = start;
-            this.endTime = finish;
-
-        } else {
-            if (start.isBefore(this.startTime)) {
+        if ((null != start) && (null != finish)) {
+            // возможно эпик ещё не получил времени старта/окончания
+            if ((null == this.startTime) || (null == this.duration)) {
                 this.startTime = start;
-            }
-            if (finish.isAfter(this.endTime)) {
                 this.endTime = finish;
+
+            } else {
+                if (start.isBefore(this.startTime)) {
+                    this.startTime = start;
+                }
+                if (finish.isAfter(this.endTime)) {
+                    this.endTime = finish;
+                }
             }
+            this.duration = Duration.between(this.startTime, this.endTime);
+        } else {
+            // в данном случае null аргументы не требуют реакции - это нормальная ситуация, что задача не
+            // привязана ко времени
         }
-        this.duration = Duration.between(this.startTime, this.endTime);
     }
 
     // сужающее обновление времени Epic требует перебора всех подзадач
@@ -174,10 +179,15 @@ public class Epic extends Task {
     }
 
     public static Epic fromStrings(String[] values) {
-        if (values[4].equals("0")) {
-            return new Epic(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]));
+        if ((null != values) && (5 <= values.length)) {
+            if (values[4].equals("0")) {
+                return new Epic(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]));
+            } else {
+                return new Epic(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
+            }
         } else {
-            return new Epic(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
+            throw new IllegalArgumentException("Параметры " + values +
+                    " не могут быть использованы в качестве описания новой Epic");
         }
     }
 }

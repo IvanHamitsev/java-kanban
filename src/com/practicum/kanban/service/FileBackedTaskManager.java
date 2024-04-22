@@ -39,6 +39,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         load();
     }
 
+    @Override
+    public void clearInstance() {
+        super.clearInstance();
+        deleteKanbanFile();
+    }
+
     public void deleteKanbanFile() {
         // при использовании временного файла в тестах, удалять за собой
         try {
@@ -78,10 +84,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (IOException e) {
             throw new ManagerLoadException("Ошибка при загрузке данных из файла " + kanbanFilePath);
         }
-    }
-
-    private void parseHeader(String line) {
-
     }
 
     private void parseElement(String description) {

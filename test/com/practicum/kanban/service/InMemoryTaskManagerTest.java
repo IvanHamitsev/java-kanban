@@ -197,6 +197,7 @@ public class InMemoryTaskManagerTest {
         assertTrue(taskManager.getEpic(epicId).getStatus() == Status.IN_PROGRESS,
                 "Статус DONE только одной подзадачи эпика оставляет статус эпика в IN_PROGRESS");
 
+        // переводим все подзадачи в статус DONE
         sub1.setStatus(Status.DONE);
         sub2.setStatus(Status.DONE);
         taskManager.updateSubtask(sub1);
@@ -211,6 +212,7 @@ public class InMemoryTaskManagerTest {
         assertTrue(taskManager.getEpic(epicId).getStatus() == Status.IN_PROGRESS,
                 "Понижение статуса одной подзадачи до IN_PROGRESS понижает статус эпика до IN_PROGRESS");
 
+        // переводим все подзадачи в статус NEW
         sub1.setStatus(Status.NEW);
         sub2.setStatus(Status.NEW);
         sub3.setStatus(Status.NEW);

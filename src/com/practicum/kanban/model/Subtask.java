@@ -31,7 +31,7 @@ public class Subtask extends Task {
         this.duration = Duration.ofMinutes(duration);
     }
 
-    private Subtask(int id, String name, String description, Status status,  LocalDateTime startTime, long duration, int parentId) {
+    private Subtask(int id, String name, String description, Status status, LocalDateTime startTime, long duration, int parentId) {
         this(name, description, status);
         this.setTaskId(id);
         this.setParentId(parentId);
@@ -88,7 +88,7 @@ public class Subtask extends Task {
         return "SUBTASK," +
                 name + "," +
                 status + "," +
-                startTime  + "," +
+                startTime + "," +
                 duration;
     }
 
@@ -103,18 +103,23 @@ public class Subtask extends Task {
                 "SUBTASK," +
                 name + "," +
                 status + "," +
-                startTime  + "," +
-                duration  + "," +
+                startTime + "," +
+                duration + "," +
                 description + "," +
                 parentId;
     }
 
     public static Subtask fromString(String[] values) {
-        if (values[4].equals("0")) {
-            return new Subtask(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Integer.parseInt(values[7]));
+        if ((null != values) && (5 <= values.length)) {
+            if (values[4].equals("0")) {
+                return new Subtask(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Integer.parseInt(values[7]));
+            } else {
+                return new Subtask(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Integer.parseInt(values[7]),
+                        LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
+            }
         } else {
-            return new Subtask(Integer.parseInt(values[0]), values[2], values[6], Status.fromString(values[3]), Integer.parseInt(values[7]),
-                    LocalDateTime.parse(values[4]), Long.parseLong(values[5]));
+            throw new IllegalArgumentException("Параметры " + values +
+                    " не могут быть использованы в качестве описания новой Subtask");
         }
     }
 }

@@ -95,6 +95,20 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
+    // Получение списка всех подзадач.
+    @Override
+    public Map<Integer, Subtask> getSubtaskList() {
+        Map<Integer, Subtask> result = new HashMap<>();
+        epicList.values().stream()
+                .forEach(e -> {
+                    e.getSubtasks().values().stream()
+                            .forEach(sub -> {
+                                result.put(sub.getTaskId(), sub);
+                            });
+                });
+        return result;
+    }
+
     // b. Удаление всех задач.
     @Override
     public void deleteAllTasks() {
@@ -431,7 +445,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void reservTime(LocalDateTime start, Duration duration) {
         if (null != start) {
             // нужно округлить вверх, но так, чтобы для целого числа не получилось +1
-            long count = (long) Math.ceil(((double)duration.toMinutes() / STEP_TIME));
+            long count = (long) Math.ceil(((double) duration.toMinutes() / STEP_TIME));
             // поток времени от start
             Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
             // занять все моменты
@@ -455,11 +469,19 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public void freeTime(LocalDateTime start, Duration duration) {
-        long count = (long) Math.ceil(((double)duration.toMinutes() / STEP_TIME));
-        // поток времени от start
-        Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
-        // найти и удалить занятые моменты
-        timeStream.filter(time -> busyMap.containsKey(time) ? busyMap.get(time) : false).forEach(time -> busyMap.remove(time));
+        if (null != start) {
+            long count = (long) Math.ceil(((double) duration.toMinutes() / STEP_TIME));
+            // поток времени от start
+            Stream<Long> timeStream = Stream.iterate(inaccurateTime.getMinutes(start), val -> val + STEP_TIME).limit(count);
+            // найти и удалить занятые моменты
+            timeStream.filter(time -> busyMap.containsKey(time) ? busyMap.get(time) : false).forEach(time -> busyMap.remove(time));
+        }
+    }
+
+    @Override
+    public void clearInstance() {
+        this.deleteAllEpics();
+        this.deleteAllTasks();
     }
 
     @Override
